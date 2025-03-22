@@ -68,23 +68,27 @@
             });
 
             if (response.ok) {
-                const msg = await response.text();
                 Swal.fire({
                     title: "Registration Successful!",
-                    text: msg,
+                    text: "Registration submitted successfully!",
                     icon: "success",
                     timer: 3000,
                     timerProgressBar: true,
                     showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/";
                 });
             } else {
+                const msg = await response.text();
                 Swal.fire({
-                    title: "reCAPTCHA Error",
-                    text: "reCAPTCHA verification failed",
+                    title: "Registration Failed",
+                    text: msg,
                     icon: "error",
                     timer: 5000,
                     timerProgressBar: true,
                     showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/";
                 });
             }
         });

@@ -1,7 +1,7 @@
 use axum::{
     extract::{Query, State},
-    http::header,
-    response::{Html, IntoResponse},
+    http::{header, StatusCode},
+    response::{Html, IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
@@ -55,7 +55,7 @@ async fn login(
             [(
                 header::SET_COOKIE,
                 format!(
-                    "token={}; Path=/;",
+                    "token={}; Path=/; Secure; SameSite=Strict",
                     params.token
                 ),
             )],
@@ -91,19 +91,15 @@ struct RecaptchaResponse {
 
 async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>) -> impl IntoResponse {
     if payload.recaptcha.is_empty() {
-        return (
-            axum::http::StatusCode::BAD_REQUEST,
-            "reCAPTCHA verification failed: missing token",
-        );
+        return Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body("reCAPTCHA verification failed".into())
+            .unwrap();
     }
 
-    // Verify reCAPTCHA with Google
     let client = Client::new();
-    let params = [
-        ("secret", RECAPTCHA_SECRET_KEY),
-        ("response", &payload.recaptcha),
-    ];
-
+    let params = [("secret", RECAPTCHA_SECRET_KEY), ("response", &payload.recaptcha)];
+    
     let res = client
         .post("https://www.google.com/recaptcha/api/siteverify")
         .form(&params)
@@ -116,7 +112,7 @@ async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>)
                 if recaptcha_response.success {
                     let token = generate_token();
 
-                    sqlx::query!(
+                    match sqlx::query!(
                         "INSERT INTO users (email, name, token, verified) VALUES ($1, $2, $3, $4)",
                         payload.email,
                         payload.name,
@@ -124,24 +120,37 @@ async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>)
                         false
                     )
                     .execute(&state.db)
-                    .await
-                    .expect("Failed to insert data");
+                    .await {
+                        Ok(_) => (),
+                        Err(_) => {
+                            return Response::builder()
+                                .status(StatusCode::BAD_REQUEST)
+                                .body("Duplicate Email".into())
+                                .unwrap();
+                        }
+                    }
 
-                    return (
-                        axum::http::StatusCode::OK,
-                        "Application submitted successfully!",
+                    let cookie_header = format!(
+                        "token={}; Path=/; Secure; SameSite=Strict",
+                        token
                     );
+
+                    return Response::builder()
+                        .status(StatusCode::OK)
+                        .header(header::SET_COOKIE, cookie_header)
+                        .body(axum::body::Body::empty())
+                        .unwrap();
                 }
             }
-            (
-                axum::http::StatusCode::BAD_REQUEST,
-                "reCAPTCHA verification failed",
-            )
+            Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body("reCAPTCHA verification failed".into())
+                .unwrap()
         }
-        Err(_) => (
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-            "Error verifying reCAPTCHA",
-        ),
+        Err(_) => Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body("Error verifying reCAPTCHA".into())
+            .unwrap(),
     }
 }
 
@@ -156,10 +165,10 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let app = Router::new()
         .route("/", get(serve_index))
+        .route("/apply", get(serve_apply_form))
         .route("/api/login", get(login))
         .route("/api/submit", post(submit_form))
         .route("/api/apply", post(apply))
-        .route("/apply", get(serve_apply_form))
         .layer(CorsLayer::new().allow_origin(Any))
         .with_state(state);
 
@@ -172,15 +181,15 @@ async fn main() -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-async fn serve_apply_form() -> impl IntoResponse {
-    let html = fs::read_to_string("static/apply.html")
-        .unwrap_or_else(|_| "Error loading application page".to_string());
-    Html(html)
-}
-
 async fn serve_index() -> impl IntoResponse {
     let html = fs::read_to_string("static/index.html")
         .unwrap_or_else(|_| "Error loading page".to_string());
+    Html(html)
+}
+
+async fn serve_apply_form() -> impl IntoResponse {
+    let html = fs::read_to_string("static/apply.html")
+        .unwrap_or_else(|_| "Error loading application page".to_string());
     Html(html)
 }
 
@@ -194,17 +203,26 @@ struct FormData {
 
 async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData>) -> &'static str {
     let user = match payload.token {
-        Some(token) => sqlx::query!("SELECT uid FROM users WHERE token = $1", token)
-            .fetch_optional(&state.db)
-            .await
-            .unwrap(),
+        Some(token) => sqlx::query!(
+            "SELECT uid, verified FROM users WHERE token = $1",
+            token
+        )
+        .fetch_optional(&state.db)
+        .await
+        .unwrap(),
         None => None,
+    };
+
+    let sender_status = match user {
+        Some(ref u) if u.verified.unwrap() => "verified",
+        Some(_) => "unverified",
+        None => "guest",
     };
 
     sqlx::query!(
         "INSERT INTO messages (user_uid, sender, name, email, message) VALUES ($1, $2, $3, $4, $5)",
         user.as_ref().map(|u| u.uid),
-        if user.is_some() { "user" } else { "guest" },
+        sender_status,
         payload.name,
         payload.email,
         payload.message
