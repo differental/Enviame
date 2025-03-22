@@ -6,13 +6,13 @@ use axum::{
     Json, Router,
 };
 use rand::{distr::Alphanumeric, Rng};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use std::fs;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
-use reqwest::Client;
 
 #[derive(Clone)]
 struct AppState {
@@ -54,10 +54,7 @@ async fn login(
         Some(user) => (
             [(
                 header::SET_COOKIE,
-                format!(
-                    "token={}; Path=/; Secure; SameSite=Strict",
-                    params.token
-                ),
+                format!("token={}; Path=/; Secure; SameSite=Strict", params.token),
             )],
             Json(LoginResponse {
                 email: Some(user.email),
@@ -89,7 +86,10 @@ struct RecaptchaResponse {
     hostname: Option<String>,
 }
 
-async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>) -> impl IntoResponse {
+async fn apply(
+    State(state): State<AppState>,
+    Json(payload): Json<ApplyRequest>,
+) -> impl IntoResponse {
     if payload.recaptcha.is_empty() {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)
@@ -98,8 +98,11 @@ async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>)
     }
 
     let client = Client::new();
-    let params = [("secret", RECAPTCHA_SECRET_KEY), ("response", &payload.recaptcha)];
-    
+    let params = [
+        ("secret", RECAPTCHA_SECRET_KEY),
+        ("response", &payload.recaptcha),
+    ];
+
     let res = client
         .post("https://www.google.com/recaptcha/api/siteverify")
         .form(&params)
@@ -120,7 +123,8 @@ async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>)
                         false
                     )
                     .execute(&state.db)
-                    .await {
+                    .await
+                    {
                         Ok(_) => (),
                         Err(_) => {
                             return Response::builder()
@@ -130,10 +134,7 @@ async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>)
                         }
                     }
 
-                    let cookie_header = format!(
-                        "token={}; Path=/; Secure; SameSite=Strict",
-                        token
-                    );
+                    let cookie_header = format!("token={}; Path=/; Secure; SameSite=Strict", token);
 
                     return Response::builder()
                         .status(StatusCode::OK)
@@ -203,13 +204,10 @@ struct FormData {
 
 async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData>) -> &'static str {
     let user = match payload.token {
-        Some(token) => sqlx::query!(
-            "SELECT uid, verified FROM users WHERE token = $1",
-            token
-        )
-        .fetch_optional(&state.db)
-        .await
-        .unwrap(),
+        Some(token) => sqlx::query!("SELECT uid, verified FROM users WHERE token = $1", token)
+            .fetch_optional(&state.db)
+            .await
+            .unwrap(),
         None => None,
     };
 
