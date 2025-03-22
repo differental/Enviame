@@ -12,6 +12,7 @@ use std::fs;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
+use reqwest::Client;
 
 #[derive(Clone)]
 struct AppState {
@@ -72,26 +73,76 @@ async fn login(
     }
 }
 
+const RECAPTCHA_SECRET_KEY: &str = "6LdpEv0qAAAAADUCDqOi1q73tuR8ys0vADBtKMEe";
+
 #[derive(Deserialize)]
 struct ApplyRequest {
     email: String,
     name: String,
+    recaptcha: String,
 }
 
-async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>) -> &'static str {
-    let token = generate_token();
-    sqlx::query!(
-        "INSERT INTO users (email, name, token, verified) VALUES ($1, $2, $3, $4)",
-        payload.email,
-        payload.name,
-        token,
-        false
-    )
-    .execute(&state.db)
-    .await
-    .expect("Failed to insert data");
+#[derive(Serialize, Deserialize)]
+struct RecaptchaResponse {
+    success: bool,
+    challenge_ts: Option<String>,
+    hostname: Option<String>,
+}
 
-    "Application submitted successfully!"
+async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>) -> impl IntoResponse {
+    if payload.recaptcha.is_empty() {
+        return (
+            axum::http::StatusCode::BAD_REQUEST,
+            "reCAPTCHA verification failed: missing token",
+        );
+    }
+
+    // Verify reCAPTCHA with Google
+    let client = Client::new();
+    let params = [
+        ("secret", RECAPTCHA_SECRET_KEY),
+        ("response", &payload.recaptcha),
+    ];
+
+    let res = client
+        .post("https://www.google.com/recaptcha/api/siteverify")
+        .form(&params)
+        .send()
+        .await;
+
+    match res {
+        Ok(response) => {
+            if let Ok(recaptcha_response) = response.json::<RecaptchaResponse>().await {
+                if recaptcha_response.success {
+                    let token = generate_token();
+
+                    sqlx::query!(
+                        "INSERT INTO users (email, name, token, verified) VALUES ($1, $2, $3, $4)",
+                        payload.email,
+                        payload.name,
+                        token,
+                        false
+                    )
+                    .execute(&state.db)
+                    .await
+                    .expect("Failed to insert data");
+
+                    return (
+                        axum::http::StatusCode::OK,
+                        "Application submitted successfully!",
+                    );
+                }
+            }
+            (
+                axum::http::StatusCode::BAD_REQUEST,
+                "reCAPTCHA verification failed",
+            )
+        }
+        Err(_) => (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            "Error verifying reCAPTCHA",
+        ),
+    }
 }
 
 #[tokio::main]
