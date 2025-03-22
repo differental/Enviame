@@ -13,6 +13,8 @@ use std::fs;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
+use dotenvy::dotenv;
+use std::env;
 
 #[derive(Clone)]
 struct AppState {
@@ -70,8 +72,6 @@ async fn login(
     }
 }
 
-const RECAPTCHA_SECRET_KEY: &str = "6LdpEv0qAAAAADUCDqOi1q73tuR8ys0vADBtKMEe";
-
 #[derive(Deserialize)]
 struct ApplyRequest {
     email: String,
@@ -97,10 +97,12 @@ async fn apply(
             .unwrap();
     }
 
+    let recaptcha_key = env::var("RECAPTCHA_SECRET_KEY").expect("SECRET_KEY not found");
+
     let client = Client::new();
     let params = [
-        ("secret", RECAPTCHA_SECRET_KEY),
-        ("response", &payload.recaptcha),
+        ("secret", recaptcha_key),
+        ("response", payload.recaptcha),
     ];
 
     let res = client
@@ -157,7 +159,7 @@ async fn apply(
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    dotenvy::dotenv().ok();
+    dotenv().ok();
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db_pool = PgPool::connect(&database_url).await?;
