@@ -72,6 +72,28 @@ async fn login(
     }
 }
 
+#[derive(Deserialize)]
+struct ApplyRequest {
+    email: String,
+    name: String,
+}
+
+async fn apply(State(state): State<AppState>, Json(payload): Json<ApplyRequest>) -> &'static str {
+    let token = generate_token();
+    sqlx::query!(
+        "INSERT INTO users (email, name, token, verified) VALUES ($1, $2, $3, $4)",
+        payload.email,
+        payload.name,
+        token,
+        false
+    )
+    .execute(&state.db)
+    .await
+    .expect("Failed to insert data");
+
+    "Application submitted successfully!"
+}
+
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
     dotenvy::dotenv().ok();
@@ -83,8 +105,10 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let app = Router::new()
         .route("/", get(serve_index))
-        .route("/login", get(login))
-        .route("/submit", post(submit_form))
+        .route("/api/login", get(login))
+        .route("/api/submit", post(submit_form))
+        .route("/api/apply", post(apply))
+        .route("/apply", get(serve_apply_form))
         .layer(CorsLayer::new().allow_origin(Any))
         .with_state(state);
 
@@ -97,7 +121,12 @@ async fn main() -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-// Serve the static index.html file
+async fn serve_apply_form() -> impl IntoResponse {
+    let html = fs::read_to_string("static/apply.html")
+        .unwrap_or_else(|_| "Error loading application page".to_string());
+    Html(html)
+}
+
 async fn serve_index() -> impl IntoResponse {
     let html = fs::read_to_string("static/index.html")
         .unwrap_or_else(|_| "Error loading page".to_string());

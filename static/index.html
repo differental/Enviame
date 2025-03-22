@@ -66,11 +66,27 @@
             return match ? match[2] : null;
         }
 
+        function getToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let token = urlParams.get("token");
+
+            if (!token) {
+                token = getCookie("token");
+            }
+
+            console.log(token);
+            return token;
+        }
+
+        function setToken(token) {
+            document.cookie = `token=${token}; path=/; Secure; HttpOnly`;
+        }
+
         async function checkLogin() {
-            const token = getCookie("token");
+            const token = getToken();
             if (!token) return;
 
-            const response = await fetch(`/login?token=${token}`);
+            const response = await fetch(`/api/login?token=${token}`);
             const data = await response.json();
 
             if (data.email && data.name) {
@@ -79,8 +95,21 @@
                 document.getElementById("name").disabled = true;
                 document.getElementById("email").disabled = true;
                 document.getElementById("tokenStatus").innerText = `Logged in as: ${data.name}`;
+
+                if (new URLSearchParams(window.location.search).get("token")) {
+                    setToken(token);
+                }
+
+                if (new URLSearchParams(window.location.search).get("debug")) {
+                    document.getElementById("tokenStatus").innerText = `Logged in as: ${data.name}\nToken: ${token}`;
+                }
+            } else {
+                if (new URLSearchParams(window.location.search).get("debug")) {
+                    document.getElementById("tokenStatus").innerText = `Token: ${token}`;
+                }
             }
-        } 
+            
+        }
 
         let selectedPriority = "Standard";
         const priorityClassMap = {
@@ -113,9 +142,9 @@
             const name = document.getElementById("name").value;
             const email = document.getElementById("email").value;
             const message = document.getElementById("message").value;
-            const token = getCookie("token");
+            const token = getToken();
 
-            const response = await fetch("/submit", {
+            const response = await fetch("/api/submit", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, message, token, priority: selectedPriority })
