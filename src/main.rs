@@ -200,6 +200,7 @@ struct FormData {
     email: String,
     name: String,
     message: String,
+    priority: String
 }
 
 async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData>) -> &'static str {
@@ -218,12 +219,13 @@ async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData
     };
 
     sqlx::query!(
-        "INSERT INTO messages (user_uid, sender, name, email, message) VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO messages (user_uid, sender, name, email, message, priority) VALUES ($1, $2, $3, $4, $5, $6)",
         user.as_ref().map(|u| u.uid),
         sender_status,
         payload.name,
         payload.email,
-        payload.message
+        payload.message,
+        payload.priority
     )
     .execute(&state.db)
     .await

@@ -51,9 +51,9 @@
             <textarea id="message" class="form-control" rows="4" required></textarea>
 
             <div class="d-flex justify-content-between mt-3">
-                <button type="button" class="priority-btn btn btn-primary flex-fill mx-1 selected" data-value="Standard">Standard</button>
-                <button type="button" class="priority-btn btn btn-outline-warning flex-fill mx-1" data-value="High">High</button>
-                <button type="button" class="priority-btn btn btn-outline-danger flex-fill mx-1" data-value="Critical">Critical</button>
+                <button type="button" class="priority-btn btn btn-outline-primary flex-fill mx-1" data-value="standard">Standard</button>
+                <button type="button" class="priority-btn btn btn-warning flex-fill mx-1 selected" data-value="urgent">Urgent</button>
+                <button type="button" class="priority-btn btn btn-outline-danger flex-fill mx-1" data-value="immediate">Immediate</button>
             </div>
             
             <button type="submit" class="btn btn-danger w-100 mt-3">Send Emergency Message</button>
@@ -111,11 +111,11 @@
             
         }
 
-        let selectedPriority = "Standard";
+        let selectedPriority = "urgent";
         const priorityClassMap = {
-            "Standard": "primary",
-            "High": "warning",
-            "Critical": "danger"
+            "standard": "primary",
+            "urgent": "warning",
+            "immediate": "danger"
         };
 
         document.querySelectorAll(".priority-btn").forEach(button => {
