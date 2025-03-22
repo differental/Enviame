@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send an Emergency Message</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        .container {
+            max-width: 600px;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+        }
+        .priority-btn {
+            border: 2px solid;
+        }
+        .priority-btn.selected {
+            color: white !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h2 class="mb-3">Send an Emergency Message</h2>
+        <p id="tokenStatus" class="text-muted"></p>
+        
+        <div id="loginSection" class="row g-2">
+            <div class="col-md-6">
+                <label for="name" class="form-label">Name:</label>
+                <input type="text" id="name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email:</label>
+                <input type="email" id="email" class="form-control" required>
+            </div>
+        </div>
+
+        <form id="submitForm">
+            <label for="message" class="form-label mt-3">Message:</label>
+            <textarea id="message" class="form-control" rows="4" required></textarea>
+
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="priority-btn btn btn-primary flex-fill mx-1 selected" data-value="Standard">Standard</button>
+                <button type="button" class="priority-btn btn btn-outline-warning flex-fill mx-1" data-value="High">High</button>
+                <button type="button" class="priority-btn btn btn-outline-danger flex-fill mx-1" data-value="Critical">Critical</button>
+            </div>
+            
+            <button type="submit" class="btn btn-danger w-100 mt-3">Send Emergency Message</button>
+        </form>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        }
+
+        async function checkLogin() {
+            const token = getCookie("token");
+            if (!token) return;
+
+            const response = await fetch(`/login?token=${token}`);
+            const data = await response.json();
+
+            if (data.email && data.name) {
+                document.getElementById("name").value = data.name;
+                document.getElementById("email").value = data.email;
+                document.getElementById("name").disabled = true;
+                document.getElementById("email").disabled = true;
+                document.getElementById("tokenStatus").innerText = `Logged in as: ${data.name}`;
+            }
+        } 
+
+        let selectedPriority = "Standard";
+        const priorityClassMap = {
+            "Standard": "primary",
+            "High": "warning",
+            "Critical": "danger"
+        };
+
+        document.querySelectorAll(".priority-btn").forEach(button => {
+            button.addEventListener("click", () => {
+                document.querySelectorAll(".priority-btn").forEach(btn => {
+                    btn.classList.remove("selected", "btn-primary", "btn-warning", "btn-danger");
+                    const priority = btn.dataset.value;
+                    const btnClass = priorityClassMap[priority];
+                    btn.classList.add(`btn-outline-${btnClass}`);
+                });
+
+                const priority = button.dataset.value;
+                const btnClass = priorityClassMap[priority];
+
+                button.classList.add("selected", `btn-${btnClass}`);
+                button.classList.remove(`btn-outline-${btnClass}`);
+
+                selectedPriority = priority;
+            });
+        });
+
+        async function submitForm(event) {
+            event.preventDefault();
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const message = document.getElementById("message").value;
+            const token = getCookie("token");
+
+            const response = await fetch("/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, message, token, priority: selectedPriority })
+            });
+
+            const result = await response.text();
+            Swal.fire({
+                title: "Success!",
+                text: result,
+                icon: "success",
+                confirmButtonText: "OK"
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", checkLogin);
+        document.getElementById("submitForm").addEventListener("submit", submitForm);
+    </script>
+</body>
+</html>
