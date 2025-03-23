@@ -215,7 +215,7 @@ async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData
     };
 
     let sender_status = match user {
-        Some(ref u) if u.verified.unwrap() => "verified",
+        Some(ref u) if u.verified => "verified",
         Some(_) => "unverified",
         None => "guest",
     };

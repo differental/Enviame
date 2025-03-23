@@ -61,6 +61,8 @@
     </div>
 
     <script>
+        var apiEmail = null, apiName = null;
+
         function getCookie(name) {
             let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
             return match ? match[2] : null;
@@ -90,6 +92,9 @@
             const data = await response.json();
 
             if (data.email && data.name) {
+                apiEmail = data.email;
+                apiName = data.name;
+
                 document.getElementById("name").value = data.name;
                 document.getElementById("email").value = data.email;
                 document.getElementById("name").disabled = true;
@@ -139,8 +144,8 @@
 
         async function submitForm(event) {
             event.preventDefault();
-            const name = document.getElementById("name").value;
-            const email = document.getElementById("email").value;
+            const name = apiName || document.getElementById("name").value;
+            const email = apiEmail || document.getElementById("email").value;
             const message = document.getElementById("message").value;
             const token = getToken();
 
