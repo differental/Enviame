@@ -12,6 +12,7 @@ use sqlx::PgPool;
 use std::fs;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
+use tokio::task;
 use tower_http::cors::{Any, CorsLayer};
 use lettre::{Message, SmtpTransport, Transport};
 use lettre::transport::smtp::authentication::Credentials;
@@ -200,7 +201,7 @@ async fn serve_apply_form() -> impl IntoResponse {
     Html(html)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct FormData {
     token: Option<String>,
     email: String,
@@ -232,7 +233,7 @@ async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), Box<dyn s
 
 async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData>) -> &'static str {
     let user = match payload.token {
-        Some(token) => sqlx::query!("SELECT uid, verified FROM users WHERE token = $1", token)
+        Some(ref token) => sqlx::query!("SELECT uid, verified FROM users WHERE token = $1", token)
             .fetch_optional(&state.db)
             .await
             .unwrap(),
@@ -258,15 +259,25 @@ async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData
     .await
     .expect("Failed to insert data");
 
-    // Deliver message to MASTER_EMAIL
-    let subject = format!("[Enviame] {} Message from {}({})", payload.priority, payload.name, sender_status);
-    let body = format!("Message details:\n{}\n---End of Message---\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}", payload.message, payload.priority, payload.name, payload.email, sender_status, env!("CARGO_PKG_VERSION"), chrono::Utc::now());
-    let _ = send_email(MASTER_EMAIL, &subject, &body).await;
+    let master_email = MASTER_EMAIL.to_string();
+    let user_email = payload.email.clone();
+    let payload_clone = payload.clone(); 
 
-    // Deliver notification to sender
-    let subject = format!("[Enviame] {} Message Delivered", payload.priority);
-    let body = format!("Your following message has been delivered:\n{}\n---End of Message---\nMessage written by {}({}) and delivered by Enviame {}, {}", payload.message, payload.name, payload.email, env!("CARGO_PKG_VERSION"), chrono::Utc::now());
-    let _ = send_email(&payload.email, &subject, &body).await;
+    task::spawn(async move {
+        let subject = format!("[Enviame] {} Message from {}({})", payload_clone.priority, payload_clone.name, sender_status);
+        let body = format!(
+            "Message details:\n\n---Start of Message\n{}\n---End of Message---\n\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}",
+            payload_clone.message, payload_clone.priority, payload_clone.name, payload_clone.email, sender_status, env!("CARGO_PKG_VERSION"), chrono::Utc::now()
+        );
+        let _ = send_email(&master_email, &subject, &body).await;
+
+        let subject_user = format!("[Enviame] {} Message Delivered", payload_clone.priority);
+        let body_user = format!(
+            "Your following message has been delivered:\n\n---Start of Message---\n{}\n---End of Message---\n\nMessage written by {} ({}) and delivered by Enviame {}, {}",
+            payload_clone.message, payload_clone.name, payload_clone.email, env!("CARGO_PKG_VERSION"), chrono::Utc::now()
+        );
+        let _ = send_email(&user_email, &subject_user, &body_user).await;
+    });
 
     "Message submitted successfully!"
 }
