@@ -13,6 +13,8 @@ use std::fs;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
+use lettre::{Message, SmtpTransport, Transport};
+use lettre::transport::smtp::authentication::Credentials;
 use dotenvy::dotenv;
 use std::env;
 
@@ -207,25 +209,24 @@ struct FormData {
     priority: String
 }
 
-async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), reqwest::Error> {
-    let api_key = env::var("SENDGRID_API_KEY").expect("SENDGRID_API_KEY must be set");
-    let client = Client::new();
+async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), Box<dyn std::error::Error>> { 
+    let smtp_server = env::var("SMTP_SERVER")?;
+    let smtp_username = env::var("SMTP_USERNAME")?;
+    let smtp_password = env::var("SMTP_PASSWORD")?;
+    let smtp_from = env::var("SMTP_FROM")?;
     
-    let email_data = serde_json::json!({
-        "personalizations": [{ "to": [{ "email": to }] }],
-        "from": { "email": "notifications@msg.brianc.tech" },
-        "subject": subject,
-        "content": [{ "type": "text/plain", "value": body }]
-    });
-
-    let _ = client
-        .post("https://api.sendgrid.com/v3/mail/send")
-        .header("Authorization", format!("Bearer {}", api_key))
-        .header("Content-Type", "application/json")
-        .json(&email_data)
-        .send()
-        .await?;
-
+    let email = Message::builder()
+        .from(smtp_from.parse()?)
+        .to(to.parse()?)
+        .subject(subject)
+        .body(body.to_string())?;
+    
+    let creds = Credentials::new(smtp_username, smtp_password);
+    
+    let mailer = SmtpTransport::relay(&smtp_server)?.credentials(creds).build();
+    
+    mailer.send(&email)?;
+    
     Ok(())
 }
 
