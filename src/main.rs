@@ -16,6 +16,8 @@ use tower_http::cors::{Any, CorsLayer};
 use dotenvy::dotenv;
 use std::env;
 
+const MASTER_EMAIL: &str = "brian@brianc.tech";
+
 #[derive(Clone)]
 struct AppState {
     db: PgPool,
@@ -205,6 +207,28 @@ struct FormData {
     priority: String
 }
 
+async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), reqwest::Error> {
+    let api_key = env::var("SENDGRID_API_KEY").expect("SENDGRID_API_KEY must be set");
+    let client = Client::new();
+    
+    let email_data = serde_json::json!({
+        "personalizations": [{ "to": [{ "email": to }] }],
+        "from": { "email": "notifications@msg.brianc.tech" },
+        "subject": subject,
+        "content": [{ "type": "text/plain", "value": body }]
+    });
+
+    let _ = client
+        .post("https://api.sendgrid.com/v3/mail/send")
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
+        .json(&email_data)
+        .send()
+        .await?;
+
+    Ok(())
+}
+
 async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData>) -> &'static str {
     let user = match payload.token {
         Some(token) => sqlx::query!("SELECT uid, verified FROM users WHERE token = $1", token)
@@ -232,6 +256,16 @@ async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData
     .execute(&state.db)
     .await
     .expect("Failed to insert data");
+
+    // Deliver message to MASTER_EMAIL
+    let subject = format!("[Enviame] {} Message from {}({})", payload.priority, payload.name, sender_status);
+    let body = format!("Message details:\n{}\n---End of Message---\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}", payload.message, payload.priority, payload.name, payload.email, sender_status, env!("CARGO_PKG_VERSION"), chrono::Utc::now());
+    let _ = send_email(MASTER_EMAIL, &subject, &body).await;
+
+    // Deliver notification to sender
+    let subject = format!("[Enviame] {} Message Delivered", payload.priority);
+    let body = format!("Your following message has been delivered:\n{}\n---End of Message---\nMessage written by {}({}) and delivered by Enviame {}, {}", payload.message, payload.name, payload.email, env!("CARGO_PKG_VERSION"), chrono::Utc::now());
+    let _ = send_email(&payload.email, &subject, &body).await;
 
     "Message submitted successfully!"
 }
