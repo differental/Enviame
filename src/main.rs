@@ -162,6 +162,18 @@ async fn apply(
     }
 }
 
+#[derive(Serialize)]
+struct VersionResponse {
+    version: String
+}
+
+async fn get_version() -> impl IntoResponse {
+    Json(VersionResponse {
+        version: env!("CARGO_PKG_VERSION").to_string()
+    })
+    .into_response()
+}
+
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
     dotenv().ok();
@@ -177,6 +189,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .route("/api/login", get(login))
         .route("/api/submit", post(submit_form))
         .route("/api/apply", post(apply))
+        .route("/api/version", get(get_version))
         .layer(CorsLayer::new().allow_origin(Any))
         .with_state(state);
 
