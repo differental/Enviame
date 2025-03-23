@@ -128,6 +128,11 @@
             document.cookie = `token=${token}; path=/; Secure; HttpOnly`;
         }
 
+        function isValidEmail(email) {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailPattern.test(email);
+        }
+
         async function checkLogin() {
             const token = getToken();
             if (!token) return;
@@ -182,10 +187,35 @@
 
         async function submitForm(event) {
             event.preventDefault();
-            const name = apiName || document.getElementById("name").value;
-            const email = apiEmail || document.getElementById("email").value;
-            const message = document.getElementById("message").value;
+
+            const name = apiName || document.getElementById("name").value.trim();
+            const email = apiEmail || document.getElementById("email").value.trim();
+            const message = document.getElementById("message").value.trim();
             const token = getToken();
+
+            if (!name || !email) {
+                Swal.fire({
+                    title: "Error",
+                    text: "Name and Email are required!",
+                    icon: "error",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                return;
+            }
+            
+            if (!isValidEmail(email)) {
+                Swal.fire({
+                    title: "Error",
+                    text: "Email Invalid!",
+                    icon: "error",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                return;
+            }
 
             const response = await fetch("/api/submit", {
                 method: "POST",
@@ -198,7 +228,11 @@
                 title: "Success!",
                 text: result,
                 icon: "success",
-                confirmButtonText: "OK"
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = "/";
             });
         }
 

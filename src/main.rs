@@ -5,19 +5,19 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use dotenvy::dotenv;
+use lettre::transport::smtp::authentication::Credentials;
+use lettre::{Message, SmtpTransport, Transport};
 use rand::{distr::Alphanumeric, Rng};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use std::env;
 use std::fs;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tokio::task;
 use tower_http::cors::{Any, CorsLayer};
-use lettre::{Message, SmtpTransport, Transport};
-use lettre::transport::smtp::authentication::Credentials;
-use dotenvy::dotenv;
-use std::env;
 
 const MASTER_EMAIL: &str = "brian@brianc.tech";
 
@@ -105,10 +105,7 @@ async fn apply(
     let recaptcha_key = env::var("RECAPTCHA_SECRET_KEY").expect("SECRET_KEY not found");
 
     let client = Client::new();
-    let params = [
-        ("secret", recaptcha_key),
-        ("response", payload.recaptcha),
-    ];
+    let params = [("secret", recaptcha_key), ("response", payload.recaptcha)];
 
     let res = client
         .post("https://www.google.com/recaptcha/api/siteverify")
@@ -164,12 +161,12 @@ async fn apply(
 
 #[derive(Serialize)]
 struct VersionResponse {
-    version: String
+    version: String,
 }
 
 async fn get_version() -> impl IntoResponse {
     Json(VersionResponse {
-        version: env!("CARGO_PKG_VERSION").to_string()
+        version: env!("CARGO_PKG_VERSION").to_string(),
     })
     .into_response()
 }
@@ -220,27 +217,29 @@ struct FormData {
     email: String,
     name: String,
     message: String,
-    priority: String
+    priority: String,
 }
 
-async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), Box<dyn std::error::Error>> { 
+async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), Box<dyn std::error::Error>> {
     let smtp_server = env::var("SMTP_SERVER")?;
     let smtp_username = env::var("SMTP_USERNAME")?;
     let smtp_password = env::var("SMTP_PASSWORD")?;
     let smtp_from = env::var("SMTP_FROM")?;
-    
+
     let email = Message::builder()
         .from(smtp_from.parse()?)
         .to(to.parse()?)
         .subject(subject)
         .body(body.to_string())?;
-    
+
     let creds = Credentials::new(smtp_username, smtp_password);
-    
-    let mailer = SmtpTransport::relay(&smtp_server)?.credentials(creds).build();
-    
+
+    let mailer = SmtpTransport::relay(&smtp_server)?
+        .credentials(creds)
+        .build();
+
     mailer.send(&email)?;
-    
+
     Ok(())
 }
 
@@ -274,12 +273,15 @@ async fn submit_form(State(state): State<AppState>, Json(payload): Json<FormData
 
     let master_email = MASTER_EMAIL.to_string();
     let user_email = payload.email.clone();
-    let payload_clone = payload.clone(); 
+    let payload_clone = payload.clone();
 
     task::spawn(async move {
-        let subject = format!("[Enviame] {} Message from {}({})", payload_clone.priority, payload_clone.name, sender_status);
+        let subject = format!(
+            "[Enviame] {} Message from {}({})",
+            payload_clone.priority, payload_clone.name, sender_status
+        );
         let body = format!(
-            "Message details:\n\n---Start of Message\n{}\n---End of Message---\n\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}",
+            "Message details:\n\n---Start of Message---\n{}\n---End of Message---\n\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}",
             payload_clone.message, payload_clone.priority, payload_clone.name, payload_clone.email, sender_status, env!("CARGO_PKG_VERSION"), chrono::Utc::now()
         );
         let _ = send_email(&master_email, &subject, &body).await;
