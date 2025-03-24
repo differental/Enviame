@@ -1,4 +1,4 @@
-name: Deploy Latest Commit
+name: Deploy Main
 
 on:
   push:
