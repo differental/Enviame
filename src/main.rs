@@ -31,6 +31,11 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let state = AppState { db: db_pool };
 
+    let port: u16 = std::env::var("APP_PORT")
+        .expect("APP_PORT must be set")
+        .parse()
+        .expect("APP_PORT must be a valid number");
+
     let app = Router::new()
         .route("/", get(serve_index))
         .route("/apply", get(serve_apply_form))
@@ -41,7 +46,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .layer(CorsLayer::new().allow_origin(Any))
         .with_state(state);
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
     println!("Server running on {}", addr);
 
     let listener = TcpListener::bind(addr).await.unwrap();
