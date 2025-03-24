@@ -39,6 +39,15 @@
             border-radius: 8px;
             margin-bottom: 15px;
         }
+        .beta-warning {
+            font-size: 0.9rem;
+            background: orange;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
         .priority-explanation {
             font-size: 0.85rem;
             color: #6c757d;
@@ -65,6 +74,10 @@
     <div class="container text-center">
         <h2 class="mb-3">Send a Priority Message</h2>
         <p id="tokenStatus" class="text-muted"></p>
+
+        <div class="beta-warning" id="beta-warning">
+            🚧 You are on a beta or development build 🚧
+        </div>
         
         <div class="explanation">
             <strong>Note:</strong> This tool is meant to facilitate the timely delivery of important messages during focus periods. Any abuse will result in access being revoked.
@@ -244,7 +257,13 @@
                 const response = await fetch('/api/version')
                     .then(response => response.json())
                     .then(data => {
-                        document.getElementById("version").textContent = data.version;
+                        if (data.deployment == "beta" || data.deployment == "dev") {
+                            document.getElementById("version").textContent = `${data.version} (${data.deployment} build)`;
+                            document.getElementById("beta-warning").style.display = "block";
+                        } else {
+                            document.getElementById("version").textContent = data.version;
+                            document.getElementById("beta-warning").style.display = "none";
+                        }
                     });
             } catch (error) {
                 console.error("Failed to fetch version: ", error);

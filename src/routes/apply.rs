@@ -28,6 +28,14 @@ pub async fn handle_apply(
     State(state): State<AppState>,
     Json(payload): Json<ApplyRequest>,
 ) -> impl IntoResponse {
+    // If not prod, do not modify database
+    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
+        return Response::builder()
+            .status(StatusCode::IM_A_TEAPOT)
+            .body("Account application ignored. This is not a production build.".into())
+            .unwrap();
+    }
+
     if payload.recaptcha.is_empty() {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)

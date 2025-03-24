@@ -45,6 +45,11 @@ pub async fn handle_form_submission(
     State(state): State<AppState>,
     Json(payload): Json<FormData>,
 ) -> &'static str {
+    // If not prod, do not modify database or send email
+    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
+        return "Form submission ignored. This is not a production build."
+    }
+
     let user = match payload.token {
         Some(ref token) => sqlx::query!("SELECT uid, verified FROM users WHERE token = $1", token)
             .fetch_optional(&state.db)
