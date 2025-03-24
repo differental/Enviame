@@ -1,6 +1,10 @@
 # Enviame
 
-![Master](https://github.com/differental/enviame/actions/workflows/deploy.yml/badge.svg)
+<p align="center">
+  <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_prod.yml?label=Production&style=for-the-badge" />
+  <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_main.yml?label=Beta&style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Made%20with-rust-red?style=for-the-badge" />
+</p>
 
 Priority Messenger, designed to patch the issues with instant messaging where message prioritisation is limited.
 
