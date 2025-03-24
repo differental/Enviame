@@ -1,5 +1,7 @@
 # Enviame
 
+![Master](https://github.com/differental/enviame/actions/workflows/deploy.yml/badge.svg)
+
 Priority Messenger, designed to patch the issues with instant messaging where message prioritisation is limited.
 
 ## Introduction
