@@ -1,7 +1,4 @@
-use axum::{
-    extract::State,
-    Json,
-};
+use axum::{extract::State, Json};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use serde::Deserialize;
@@ -44,7 +41,10 @@ async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), Box<dyn s
     Ok(())
 }
 
-pub async fn handle_form_submission(State(state): State<AppState>, Json(payload): Json<FormData>) -> &'static str {
+pub async fn handle_form_submission(
+    State(state): State<AppState>,
+    Json(payload): Json<FormData>,
+) -> &'static str {
     let user = match payload.token {
         Some(ref token) => sqlx::query!("SELECT uid, verified FROM users WHERE token = $1", token)
             .fetch_optional(&state.db)

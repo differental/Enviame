@@ -1,5 +1,6 @@
 use axum::{
-    routing::{get, post}, Router,
+    routing::{get, post},
+    Router,
 };
 use dotenvy::dotenv;
 use sqlx::PgPool;
@@ -8,7 +9,13 @@ use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
 
 mod routes;
-use routes::{apply::handle_apply, form::handle_form_submission, login::handle_login, pages::{serve_apply_form, serve_index}, version::handle_version};
+use routes::{
+    apply::handle_apply,
+    form::handle_form_submission,
+    login::handle_login,
+    pages::{serve_apply_form, serve_index},
+    version::handle_version,
+};
 
 mod utils;
 
