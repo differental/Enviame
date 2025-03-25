@@ -46,9 +46,9 @@ pub async fn handle_form_submission(
     Json(payload): Json<FormData>,
 ) -> &'static str {
     // If not prod, do not modify database or send email
-    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
-        return "Form submission ignored. This is not a production build."
-    }
+    //if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
+    //    return "Form submission ignored. This is not a production build."
+    //}
 
     let user = match payload.token {
         Some(ref token) => sqlx::query!("SELECT uid, verified FROM users WHERE token = $1", token)
@@ -85,24 +85,24 @@ pub async fn handle_form_submission(
     let utc_now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.2fZ");
     let cargo_version = env!("CARGO_PKG_VERSION");
 
-    task::spawn(async move {
-        let subject = format!(
-            "[Enviame] {} Message from {}({})",
-            priority_capitalised, payload_clone.name, sender_status
-        );
-        let body = format!(
-            "Message details:\n\n---Start of Message---\n{}\n---End of Message---\n\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}",
-            payload_clone.message, priority_capitalised, payload_clone.name, payload_clone.email, sender_status, cargo_version, utc_now
-        );
-        let _ = send_email(&master_email, &subject, &body).await;
+    //task::spawn(async move {
+    let subject = format!(
+        "[Enviame] {} Message from {}({})",
+        priority_capitalised, payload_clone.name, sender_status
+    );
+    let body = format!(
+        "Message details:\n\n---Start of Message---\n{}\n---End of Message---\n\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}",
+        payload_clone.message, priority_capitalised, payload_clone.name, payload_clone.email, sender_status, cargo_version, utc_now
+    );
+    let _ = send_email(&master_email, &subject, &body).await;
 
-        let subject_user = format!("[Enviame] {} Message Delivered", priority_capitalised);
-        let body_user = format!(
-            "Your following message has been delivered:\n\n---Start of Message---\n{}\n---End of Message---\n\nMessage written by {} ({}) and delivered by Enviame {}, {}",
-            payload_clone.message, payload_clone.name, payload_clone.email, cargo_version, utc_now
-        );
-        let _ = send_email(&user_email, &subject_user, &body_user).await;
-    });
+    let subject_user = format!("[Enviame] {} Message Delivered", priority_capitalised);
+    let body_user = format!(
+        "Your following message has been delivered:\n\n---Start of Message---\n{}\n---End of Message---\n\nMessage written by {} ({}) and delivered by Enviame {}, {}",
+        payload_clone.message, payload_clone.name, payload_clone.email, cargo_version, utc_now
+    );
+    let _ = send_email(&user_email, &subject_user, &body_user).await;
+    //});
 
     "Message submitted successfully!"
 }
