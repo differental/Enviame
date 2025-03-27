@@ -6,7 +6,7 @@ use axum::{
 };
 use axum_csrf::CsrfToken;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::env;
 
 use crate::{state::AppState, utils::generate_token};
@@ -19,12 +19,11 @@ pub struct ApplyRequest {
     recaptcha: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct RecaptchaResponse {
-    success: bool,
-    challenge_ts: Option<String>,
-    hostname: Option<String>,
+    success: bool
 }
+
 pub async fn handle_apply(
     State(state): State<AppState>,
     token: CsrfToken,
