@@ -35,8 +35,9 @@ pub async fn handle_apply(
         return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
     }
 
-    // If not prod, do not modify database
-    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
+    // If not prod or beta, do not modify database
+    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
+     && std::env::var("DEPLOY_ENV").unwrap_or_default() != "beta" {
         return (
             StatusCode::IM_A_TEAPOT,
             "Account application ignored. This is not a production build.",

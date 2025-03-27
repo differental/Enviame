@@ -56,8 +56,9 @@ pub async fn handle_form_submission(
         return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
     }
 
-    // If not prod, do not modify database or send email
-    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
+    // If not prod or beta, do not modify database or send email
+    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
+     && std::env::var("DEPLOY_ENV").unwrap_or_default() != "beta" {
         return (
             StatusCode::IM_A_TEAPOT,
             "Form submission ignored. This is not a production build.",
