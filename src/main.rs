@@ -14,7 +14,7 @@ use routes::{
     apply::handle_apply,
     form::handle_form_submission,
     login::handle_login,
-    pages::{serve_apply_form, serve_index},
+    pages::{serve_about_page, serve_apply_form, serve_index},
     version::handle_version,
 };
 
@@ -43,6 +43,7 @@ async fn main() -> Result<(), sqlx::Error> {
     let app = Router::new()
         .route("/", get(serve_index))
         .route("/apply", get(serve_apply_form))
+        .route("/about", get(serve_about_page))
         .route("/api/login", get(handle_login))
         .route("/api/submit", post(handle_form_submission))
         .route("/api/apply", post(handle_apply))

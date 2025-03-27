@@ -30,3 +30,13 @@ pub async fn serve_apply_form(
 
     (token, Html(html)).into_response()
 }
+
+pub async fn serve_about_page(State(_state): State<AppState>, token: CsrfToken) -> impl IntoResponse {
+    let csrf_token = token.authenticity_token().unwrap();
+
+    let html = fs::read_to_string("static/about.html")
+        .unwrap_or_else(|_| "Error loading page".to_string())
+        .replace("{{ csrf_token }}", &csrf_token);
+
+    (token, Html(html)).into_response()
+}
