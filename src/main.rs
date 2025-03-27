@@ -7,7 +7,7 @@ use dotenvy::dotenv;
 use sqlx::PgPool;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{services::ServeDir, cors::{Any, CorsLayer}};
 
 mod routes;
 use routes::{
@@ -47,6 +47,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .route("/api/submit", post(handle_form_submission))
         .route("/api/apply", post(handle_apply))
         .route("/api/version", get(handle_version))
+        .nest_service("/assets", ServeDir::new("assets"))
         .layer(CorsLayer::new().allow_origin(Any))
         .layer(CsrfLayer::new(csrf_config))
         .with_state(state);

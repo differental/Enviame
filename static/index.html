@@ -80,7 +80,7 @@
         <h2 class="mb-3">Send a Priority Message</h2>
         <p id="tokenStatus" class="text-muted"></p>
 
-        <div class="beta-warning" id="beta-warning">
+        <div class="beta-warning" id="beta-warning" style="display:none">
             🚧 You are on a beta or development build 🚧
         </div>
         
@@ -125,33 +125,9 @@
         </div>
     </div>
 
+    <script src="/assets/utils.js"></script>
     <script>
         var apiEmail = null, apiName = null;
-
-        function getCookie(name) {
-            let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-            return match ? match[2] : null;
-        }
-
-        function getToken() {
-            const urlParams = new URLSearchParams(window.location.search);
-            let token = urlParams.get("token");
-
-            if (!token) {
-                token = getCookie("token");
-            }
-
-            return token;
-        }
-
-        function setToken(token) {
-            document.cookie = `token=${token}; path=/; Secure; HttpOnly`;
-        }
-
-        function isValidEmail(email) {
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailPattern.test(email);
-        }
 
         async function checkLogin() {
             const token = getToken();
@@ -215,26 +191,12 @@
             const token = getToken();
 
             if (!name || !email) {
-                Swal.fire({
-                    title: "Error",
-                    text: "Name and Email are required!",
-                    icon: "error",
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                });
+                showSwal("Error", "Name and Email are required!", "error");
                 return;
             }
             
             if (!isValidEmail(email)) {
-                Swal.fire({
-                    title: "Error",
-                    text: "Email Invalid!",
-                    icon: "error",
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                });
+                showSwal("Error", "Email invalid!", "error");
                 return;
             }
 
@@ -246,52 +208,15 @@
             const msg = await response.text();
 
             if (response.ok) {
-                Swal.fire({
-                    title: "Submission Successful!",
-                    text: msg,
-                    icon: "success",
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "/";
-                });
+                showSwal("Submission Successful!", msg, "success", "/");
             } else {
-                Swal.fire({
-                    title: "Submission Failed",
-                    text: msg,
-                    icon: "error",
-                    timer: 5000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "/";
-                });
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", checkLogin);
-        document.getElementById("submitForm").addEventListener("submit", submitForm);
-
-        async function fetchVersion() {
-            try {
-                const response = await fetch('/api/version')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.deployment == "beta" || data.deployment == "dev") {
-                            document.getElementById("version").textContent = `${data.version} (${data.deployment} build)`;
-                            document.getElementById("beta-warning").style.display = "block";
-                        } else {
-                            document.getElementById("version").textContent = data.version;
-                            document.getElementById("beta-warning").style.display = "none";
-                        }
-                    });
-            } catch (error) {
-                console.error("Failed to fetch version: ", error);
+                showSwal("Submission Failed", msg, "error", "/", 5000);
             }
         }
 
         document.addEventListener("DOMContentLoaded", fetchVersion);
+        document.addEventListener("DOMContentLoaded", checkLogin);
+        document.getElementById("submitForm").addEventListener("submit", submitForm);
     </script>
 </body>
 </html>

@@ -13,7 +13,7 @@ jsonwebtoken = "9"
 argon2 = "0.5"
 lettre = { version = "0.11", features = ["smtp-transport", "tokio1-native-tls"] }
 dotenvy = "0.15"
-tower-http = { version = "0.6", features = ["cors"] }
+tower-http = { version = "0.6", features = ["cors", "fs"] }
 rand = "0.9.0"
 reqwest = { version = "0.12.15", features = ["json"] }
 chrono = "0.4.40"

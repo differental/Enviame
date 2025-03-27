@@ -74,12 +74,8 @@
     </div>
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="/assets/utils.js"></script>
     <script>
-        function isValidEmail(email) {
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailPattern.test(email);
-        }
-
         async function submitApplyForm(event) {
             event.preventDefault();
             
@@ -99,26 +95,12 @@
             }
 
             if (!name || !email) {
-                Swal.fire({
-                    title: "Error",
-                    text: "Name and Email are required!",
-                    icon: "error",
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                });
+                showSwal("Error", "Name and Email are required!", "error");
                 return;
             }
             
             if (!isValidEmail(email)) {
-                Swal.fire({
-                    title: "Error",
-                    text: "Email Invalid!",
-                    icon: "error",
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                });
+                showSwal("Error", "Email invalid!", "error");
                 return;
             }
             
@@ -130,39 +112,9 @@
             const msg = await response.text();
 
             if (response.ok) {
-                Swal.fire({
-                    title: "Registration Successful!",
-                    text: msg,
-                    icon: "success",
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "/";
-                });
+                showSwal("Registration Successful!", msg, "success", "/");
             } else {
-                Swal.fire({
-                    title: "Registration Failed",
-                    text: msg,
-                    icon: "error",
-                    timer: 5000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "/";
-                });
-            }
-        }
-
-        async function fetchVersion() {
-            try {
-                const response = await fetch('/api/version')
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("version").textContent = data.version;
-                    });
-            } catch (error) {
-                console.error("Failed to fetch version: ", error);
+                showSwal("Registration Failed", msg, "error", "/", 5000);
             }
         }
 
