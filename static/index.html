@@ -224,6 +224,12 @@
         document.addEventListener("DOMContentLoaded", fetchVersion);
         document.addEventListener("DOMContentLoaded", checkLogin);
         document.getElementById("submitForm").addEventListener("submit", submitForm);
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/assets/sw.js")
+                .then(() => console.log("Service Worker registered!"))
+                .catch(err => console.log("Service Worker registration failed:", err));
+        }
     </script>
 </body>
 </html>

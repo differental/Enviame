@@ -65,6 +65,12 @@
     <script src="/assets/utils.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", fetchVersion);
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/assets/sw.js")
+                .then(() => console.log("Service Worker registered!"))
+                .catch(err => console.log("Service Worker registration failed:", err));
+        }
     </script>
 </body>
 </html>
