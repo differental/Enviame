@@ -1,4 +1,5 @@
 use axum::{extract::State, Json};
+use axum_csrf::CsrfToken;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use serde::Deserialize;
@@ -11,6 +12,7 @@ const MASTER_EMAIL: &str = "brian@brianc.tech";
 
 #[derive(Deserialize, Clone)]
 pub struct FormData {
+    csrf_token: String,
     token: Option<String>,
     email: String,
     name: String,
@@ -43,8 +45,14 @@ async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), Box<dyn s
 
 pub async fn handle_form_submission(
     State(state): State<AppState>,
+    token: CsrfToken,
     Json(payload): Json<FormData>,
 ) -> &'static str {
+    // Validate csrf token
+    if token.verify(&payload.csrf_token).is_err() {
+        return "CSRF token invalid.";
+    }
+
     // If not prod, do not modify database or send email
     if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
         return "Form submission ignored. This is not a production build."

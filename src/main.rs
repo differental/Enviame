@@ -7,6 +7,7 @@ use sqlx::PgPool;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
+use axum_csrf::{CsrfConfig, CsrfLayer};
 
 mod routes;
 use routes::{
@@ -25,6 +26,7 @@ use state::AppState;
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
     dotenv().ok();
+    tracing_subscriber::fmt::init();
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db_pool = PgPool::connect(&database_url).await?;
@@ -36,6 +38,8 @@ async fn main() -> Result<(), sqlx::Error> {
         .parse()
         .expect("APP_PORT must be a valid number");
 
+    let csrf_config = CsrfConfig::default();
+
     let app = Router::new()
         .route("/", get(serve_index))
         .route("/apply", get(serve_apply_form))
@@ -44,6 +48,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .route("/api/apply", post(handle_apply))
         .route("/api/version", get(handle_version))
         .layer(CorsLayer::new().allow_origin(Any))
+        .layer(CsrfLayer::new(csrf_config))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));

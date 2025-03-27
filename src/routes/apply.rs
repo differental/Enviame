@@ -4,6 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use axum_csrf::CsrfToken;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -12,6 +13,7 @@ use crate::{state::AppState, utils::generate_token};
 
 #[derive(Deserialize)]
 pub struct ApplyRequest {
+    csrf_token: String,
     email: String,
     name: String,
     recaptcha: String,
@@ -26,8 +28,17 @@ struct RecaptchaResponse {
 
 pub async fn handle_apply(
     State(state): State<AppState>,
+    token: CsrfToken,
     Json(payload): Json<ApplyRequest>,
 ) -> impl IntoResponse {
+    // Validate csrf token
+    if token.verify(&payload.csrf_token).is_err() {
+        return Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body("CSRF token invalid.".into())
+            .unwrap();
+    }
+
     // If not prod, do not modify database
     if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
         return Response::builder()

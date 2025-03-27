@@ -68,6 +68,11 @@
             background-color: #f8d7da;
             color: #842029;
         }
+        .footer {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -83,18 +88,20 @@
             <strong>Note:</strong> This tool is meant to facilitate the timely delivery of important messages during focus periods. Any abuse will result in access being revoked.
         </div>
 
-        <div id="loginSection" class="row g-2">
-            <div class="col-md-6">
-                <label for="name" class="form-label">Name</label>
-                <input type="text" id="name" class="form-control" required>
-            </div>
-            <div class="col-md-6">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" id="email" class="form-control" required>
-            </div>
-        </div>
-
         <form id="submitForm">
+            <input type="hidden" id="csrf_token" value="{{ csrf_token }}"/>
+
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" id="name" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+            </div>
+
             <label for="message" class="form-label mt-3">Message</label>
             <textarea id="message" class="form-control" rows="4" required></textarea>
 
@@ -201,6 +208,7 @@
         async function submitForm(event) {
             event.preventDefault();
 
+            const csrf_token = document.getElementById("csrf_token").value;
             const name = apiName || document.getElementById("name").value.trim();
             const email = apiEmail || document.getElementById("email").value.trim();
             const message = document.getElementById("message").value.trim();
@@ -233,7 +241,7 @@
             const response = await fetch("/api/submit", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, message, token, priority: selectedPriority })
+                body: JSON.stringify({ csrf_token, name, email, message, token, priority: selectedPriority })
             });
 
             const result = await response.text();

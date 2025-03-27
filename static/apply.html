@@ -27,6 +27,15 @@
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
             min-height: fit-content;
         }
+        .beta-warning {
+            font-size: 0.9rem;
+            background: orange;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
         .footer {
             font-size: 0.85rem;
             color: #6c757d;
@@ -37,29 +46,44 @@
 <body>
     <div class="container text-center">
         <h2 class="mb-3">Account Registration</h2>
+
+        <div class="beta-warning" id="beta-warning">
+            🚧 You are on a beta or development build 🚧
+        </div>
+
         <form id="applyForm">
+            <input type="hidden" id="csrf_token" value="{{ csrf_token }}"/>
+
             <div class="mb-3 text-start">
                 <label for="name" class="form-label">Name:</label>
-                <input type="text" id="name" name="name" class="form-control" required>
+                <input type="text" id="name" class="form-control" required>
             </div>
             <div class="mb-3 text-start">
                 <label for="email" class="form-label">Email:</label>
                 <input type="email" id="email" class="form-control" required>
             </div>
-            <div class="g-recaptcha mb-3" data-sitekey="6LfIGv0qAAAAABlHk_-RPL1yY4Me841MmMsh81T5"></div>
+
+            <div class="g-recaptcha mb-3" data-sitekey="{{ recaptcha_site_token }}"></div>
+            
             <button type="submit" class="btn btn-primary w-100">Submit</button>
         </form>
 
         <div class="footer text-center mt-4">
-            <a href="https://github.com/enviame/enviame" target="_blank">Enviame</a> v<span id="version">X.X.X</span>, With ❤️ by <a href="https://github.com/differental" target="_blank">Brian</a>
+            <a href="https://github.com/differental/enviame" target="_blank">Enviame</a> v<span id="version">X.X.X</span>, With ❤️ by <a href="https://github.com/differental" target="_blank">Brian</a>
         </div>
     </div>
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
-        document.getElementById("applyForm").addEventListener("submit", async function(event) {
+        function isValidEmail(email) {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailPattern.test(email);
+        }
+
+        async function submitApplyForm(event) {
             event.preventDefault();
             
+            const csrf_token = document.getElementById("csrf_token").value;
             const name = document.getElementById("name").value;
             const email = document.getElementById("email").value;
             const recaptchaResponse = grecaptcha.getResponse();
@@ -73,11 +97,35 @@
                 });
                 return;
             }
+
+            if (!name || !email) {
+                Swal.fire({
+                    title: "Error",
+                    text: "Name and Email are required!",
+                    icon: "error",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                return;
+            }
+            
+            if (!isValidEmail(email)) {
+                Swal.fire({
+                    title: "Error",
+                    text: "Email Invalid!",
+                    icon: "error",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                return;
+            }
             
             const response = await fetch("/api/apply", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, recaptcha: recaptchaResponse })
+                body: JSON.stringify({ csrf_token, name, email, recaptcha: recaptchaResponse })
             });
 
             if (response.ok) {
@@ -104,7 +152,7 @@
                     window.location.href = "/";
                 });
             }
-        });
+        }
 
         async function fetchVersion() {
             try {
@@ -119,6 +167,7 @@
         }
 
         document.addEventListener("DOMContentLoaded", fetchVersion);
+        document.getElementById("applyForm").addEventListener("submit", submitApplyForm);
     </script>
 </body>
 </html>
