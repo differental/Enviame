@@ -1,7 +1,7 @@
 use axum::{
     extract::State,
+    response::IntoResponse,
     http::{header, StatusCode},
-    response::{IntoResponse, Response},
     Json,
 };
 use axum_csrf::CsrfToken;
@@ -25,7 +25,6 @@ struct RecaptchaResponse {
     challenge_ts: Option<String>,
     hostname: Option<String>,
 }
-
 pub async fn handle_apply(
     State(state): State<AppState>,
     token: CsrfToken,
@@ -33,25 +32,20 @@ pub async fn handle_apply(
 ) -> impl IntoResponse {
     // Validate csrf token
     if token.verify(&payload.csrf_token).is_err() {
-        return Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body("CSRF token invalid.".into())
-            .unwrap();
+        return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
     }
 
     // If not prod, do not modify database
     if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
-        return Response::builder()
-            .status(StatusCode::IM_A_TEAPOT)
-            .body("Account application ignored. This is not a production build.".into())
-            .unwrap();
+        return (
+            StatusCode::IM_A_TEAPOT,
+            "Account application ignored. This is not a production build.",
+        )
+            .into_response();
     }
 
     if payload.recaptcha.is_empty() {
-        return Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body("reCAPTCHA verification failed".into())
-            .unwrap();
+        return (StatusCode::BAD_REQUEST, "reCAPTCHA verification failed").into_response();
     }
 
     let recaptcha_key = env::var("RECAPTCHA_SECRET_KEY").expect("SECRET_KEY not found");
@@ -83,30 +77,26 @@ pub async fn handle_apply(
                     {
                         Ok(_) => (),
                         Err(_) => {
-                            return Response::builder()
-                                .status(StatusCode::BAD_REQUEST)
-                                .body("Duplicate Email".into())
-                                .unwrap();
+                            return (StatusCode::BAD_REQUEST, "Duplicate Email").into_response()
                         }
                     }
 
                     let cookie_header = format!("token={}; Path=/; Secure; SameSite=Strict", token);
 
-                    return Response::builder()
-                        .status(StatusCode::OK)
-                        .header(header::SET_COOKIE, cookie_header)
-                        .body(axum::body::Body::empty())
-                        .unwrap();
+                    return (
+                        StatusCode::OK,
+                        [(header::SET_COOKIE, cookie_header)],
+                        "Registration submitted successfully!",
+                    )
+                        .into_response();
                 }
             }
-            Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .body("reCAPTCHA verification failed".into())
-                .unwrap()
+            (StatusCode::BAD_REQUEST, "reCAPTCHA verification failed").into_response()
         }
-        Err(_) => Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body("Error verifying reCAPTCHA".into())
-            .unwrap(),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Error verifying reCAPTCHA",
+        )
+            .into_response(),
     }
 }

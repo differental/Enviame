@@ -2,12 +2,12 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use axum_csrf::{CsrfConfig, CsrfLayer};
 use dotenvy::dotenv;
 use sqlx::PgPool;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
-use axum_csrf::{CsrfConfig, CsrfLayer};
 
 mod routes;
 use routes::{

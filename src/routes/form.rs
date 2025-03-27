@@ -1,4 +1,9 @@
-use axum::{extract::State, Json};
+use axum::{
+    extract::State,
+    response::IntoResponse,
+    http::StatusCode,
+    Json,
+};
 use axum_csrf::CsrfToken;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
@@ -7,8 +12,6 @@ use std::env;
 use tokio::task;
 
 use crate::{state::AppState, utils::capitalize_first};
-
-const MASTER_EMAIL: &str = "brian@brianc.tech";
 
 #[derive(Deserialize, Clone)]
 pub struct FormData {
@@ -47,15 +50,19 @@ pub async fn handle_form_submission(
     State(state): State<AppState>,
     token: CsrfToken,
     Json(payload): Json<FormData>,
-) -> &'static str {
+) -> impl IntoResponse {
     // Validate csrf token
     if token.verify(&payload.csrf_token).is_err() {
-        return "CSRF token invalid.";
+        return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
     }
 
     // If not prod, do not modify database or send email
     if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod" {
-        return "Form submission ignored. This is not a production build."
+        return (
+            StatusCode::IM_A_TEAPOT,
+            "Form submission ignored. This is not a production build.",
+        )
+            .into_response();
     }
 
     let user = match payload.token {
@@ -85,7 +92,7 @@ pub async fn handle_form_submission(
     .await
     .expect("Failed to insert data");
 
-    let master_email = MASTER_EMAIL.to_string();
+    let master_email = env!("MASTER_EMAIL");
     let user_email = payload.email.clone();
     let payload_clone = payload.clone();
     let priority_capitalised = capitalize_first(payload_clone.priority);
@@ -102,7 +109,7 @@ pub async fn handle_form_submission(
             "Message details:\n\n---Start of Message---\n{}\n---End of Message---\n\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}",
             payload_clone.message, priority_capitalised, payload_clone.name, payload_clone.email, sender_status, cargo_version, utc_now
         );
-        let _ = send_email(&master_email, &subject, &body).await;
+        let _ = send_email(master_email, &subject, &body).await;
 
         let subject_user = format!("[Enviame] {} Message Delivered", priority_capitalised);
         let body_user = format!(
@@ -112,5 +119,5 @@ pub async fn handle_form_submission(
         let _ = send_email(&user_email, &subject_user, &body_user).await;
     });
 
-    "Message submitted successfully!"
+    (StatusCode::OK, "Message submitted successfully!").into_response()
 }

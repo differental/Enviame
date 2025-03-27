@@ -1,4 +1,7 @@
-use axum::{extract::State, response::{Html, IntoResponse}};
+use axum::{
+    extract::State,
+    response::{Html, IntoResponse},
+};
 use axum_csrf::CsrfToken;
 use std::fs;
 
@@ -10,11 +13,14 @@ pub async fn serve_index(State(_state): State<AppState>, token: CsrfToken) -> im
     let html = fs::read_to_string("static/index.html")
         .unwrap_or_else(|_| "Error loading page".to_string())
         .replace("{{ csrf_token }}", &csrf_token);
-    
+
     (token, Html(html)).into_response()
 }
 
-pub async fn serve_apply_form(State(_state): State<AppState>, token: CsrfToken) -> impl IntoResponse {
+pub async fn serve_apply_form(
+    State(_state): State<AppState>,
+    token: CsrfToken,
+) -> impl IntoResponse {
     let csrf_token = token.authenticity_token().unwrap();
 
     let html = fs::read_to_string("static/apply.html")

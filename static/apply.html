@@ -127,11 +127,12 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ csrf_token, name, email, recaptcha: recaptchaResponse })
             });
+            const msg = await response.text();
 
             if (response.ok) {
                 Swal.fire({
                     title: "Registration Successful!",
-                    text: "Registration submitted successfully!",
+                    text: msg,
                     icon: "success",
                     timer: 3000,
                     timerProgressBar: true,
@@ -140,7 +141,6 @@
                     window.location.href = "/";
                 });
             } else {
-                const msg = await response.text();
                 Swal.fire({
                     title: "Registration Failed",
                     text: msg,

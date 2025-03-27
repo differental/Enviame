@@ -243,18 +243,31 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ csrf_token, name, email, message, token, priority: selectedPriority })
             });
+            const msg = await response.text();
 
-            const result = await response.text();
-            Swal.fire({
-                title: "Success!",
-                text: result,
-                icon: "success",
-                timer: 3000,
-                timerProgressBar: true,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = "/";
-            });
+            if (response.ok) {
+                Swal.fire({
+                    title: "Submission Successful!",
+                    text: msg,
+                    icon: "success",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/";
+                });
+            } else {
+                Swal.fire({
+                    title: "Submission Failed",
+                    text: msg,
+                    icon: "error",
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/";
+                });
+            }
         }
 
         document.addEventListener("DOMContentLoaded", checkLogin);
