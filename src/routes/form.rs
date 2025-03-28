@@ -8,24 +8,46 @@ use tokio::task;
 
 use crate::{state::AppState, utils::capitalize_first};
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum MessagePriority {
+    Standard,
+    Urgent,
+    Immediate,
+}
+
+impl ToString for MessagePriority {
+    fn to_string(&self) -> String {
+        match self {
+            MessagePriority::Standard => "standard".to_string(),
+            MessagePriority::Urgent => "urgent".to_string(),
+            MessagePriority::Immediate => "immediate".to_string(),
+        }
+    }
+}
+
+#[derive(Deserialize)]
 pub struct FormData {
     csrf_token: String,
     token: Option<String>,
     email: String,
     name: String,
     message: String,
-    priority: String,
+    priority: MessagePriority,
 }
 
-async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn send_email(
+    from: &str,
+    to: &str,
+    subject: &str,
+    body: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let smtp_server = env::var("SMTP_SERVER")?;
     let smtp_username = env::var("SMTP_USERNAME")?;
     let smtp_password = env::var("SMTP_PASSWORD")?;
-    let smtp_from = env::var("SMTP_FROM")?;
 
     let email = Message::builder()
-        .from(smtp_from.parse()?)
+        .from(from.parse()?)
         .to(to.parse()?)
         .subject(subject)
         .body(body.to_string())?;
@@ -83,16 +105,32 @@ pub async fn handle_form_submission(
         payload.name,
         payload.email,
         payload.message,
-        payload.priority
+        payload.priority.to_string()
     )
     .execute(&state.db)
     .await
     .expect("Failed to insert data");
 
-    let master_email = env!("MASTER_EMAIL");
-    let user_email = payload.email.clone();
-    let payload_clone = payload.clone();
-    let priority_capitalised = capitalize_first(payload_clone.priority);
+    let notification_email = env!("NOTIFICATION_EMAIL");
+    let priority_capitalised = capitalize_first(payload.priority.to_string());
+
+    let mut from = std::env::var("SMTP_FROM").expect("Must include a SMTP_FROM email");
+    let from_urgent_var = std::env::var("SMTP_FROM_URGENT");
+    let from_immediate_var = std::env::var("SMTP_FROM_IMMEDIATE");
+
+    match payload.priority {
+        MessagePriority::Urgent => {
+            if let Ok(from_urgent) = from_urgent_var {
+                from = from_urgent;
+            }
+        }
+        MessagePriority::Immediate => {
+            if let Ok(from_immediate) = from_immediate_var {
+                from = from_immediate;
+            }
+        }
+        _ => (),
+    }
 
     let utc_now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ");
     let cargo_version = env!("CARGO_PKG_VERSION");
@@ -100,26 +138,26 @@ pub async fn handle_form_submission(
     task::spawn(async move {
         let subject = format!(
             "[Enviame] {} Message from {}({})",
-            priority_capitalised, payload_clone.name, sender_status
+            priority_capitalised, payload.name, sender_status
         );
         let body = format!(
             "Message details:\n\n---Start of Message---\n{}\n---End of Message---\n\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}",
-            payload_clone.message,
+            payload.message,
             priority_capitalised,
-            payload_clone.name,
-            payload_clone.email,
+            payload.name,
+            payload.email,
             sender_status,
             cargo_version,
             utc_now
         );
-        let _ = send_email(master_email, &subject, &body).await;
+        let _ = send_email(&from, notification_email, &subject, &body).await;
 
         let subject_user = format!("[Enviame] {} Message Delivered", priority_capitalised);
         let body_user = format!(
             "Your following message has been delivered:\n\n---Start of Message---\n{}\n---End of Message---\n\nMessage written by {} ({}) and delivered by Enviame {}, {}",
-            payload_clone.message, payload_clone.name, payload_clone.email, cargo_version, utc_now
+            payload.message, payload.name, payload.email, cargo_version, utc_now
         );
-        let _ = send_email(&user_email, &subject_user, &body_user).await;
+        let _ = send_email(&from, &payload.email, &subject_user, &body_user).await;
     });
 
     (StatusCode::OK, "Message submitted successfully!").into_response()
