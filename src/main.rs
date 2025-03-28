@@ -7,7 +7,10 @@ use dotenvy::dotenv;
 use sqlx::PgPool;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use tower_http::{services::ServeDir, cors::{Any, CorsLayer}};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    services::ServeDir,
+};
 
 mod routes;
 use routes::{

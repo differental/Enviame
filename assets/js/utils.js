@@ -55,3 +55,11 @@ function showSwal(title, text, icon, redirectUrl = null, timer = 3000) {
         }
     });
 }
+
+document.addEventListener("DOMContentLoaded", fetchVersion);
+
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/assets/js/sw.js")
+        .then(() => console.log("Service Worker registered!"))
+        .catch(err => console.log("Service Worker registration failed:", err));
+}

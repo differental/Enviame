@@ -1,138 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enviame - Priority Messenger</title>
-    <link rel="manifest" href="/assets/site.webmanifest">
-    <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/assets/icons/favicon-32x32.png" type="image/png" sizes="32x32">
-    <link rel="icon" href="/assets/icons/favicon-16x16.png" type="image/png" sizes="16x16">
-    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% extends "base.html" %}
+
+{% block title %}Enviame - Priority Messenger{% endblock %}
+
+{% block scripts %}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        body {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            background-attachment: fixed;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            padding: 30px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
-            min-height: fit-content;
-        }
-        .priority-btn {
-            border: 2px solid;
-        }
-        .priority-btn.selected {
-            color: white !important;
-        }
-        .explanation {
-            font-size: 0.9rem;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .beta-warning {
-            font-size: 0.9rem;
-            background: orange;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .priority-explanation {
-            font-size: 0.85rem;
-            color: #6c757d;
-            display: none;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-        .priority-explanation.standard {
-            background-color: #cfe2ff;
-            color: #084298;
-        }
-        .priority-explanation.urgent {
-            background-color: #fff3cd;
-            color: #664d03;
-        }
-        .priority-explanation.immediate {
-            background-color: #f8d7da;
-            color: #842029;
-        }
-        .footer {
-            font-size: 0.85rem;
-            color: #6c757d;
-            margin-top: 15px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container text-center">
-        <h2 class="mb-3">Send a Priority Message</h2>
-        <p id="tokenStatus" class="text-muted"></p>
+{% endblock %}
 
-        <div class="beta-warning" id="beta-warning" style="display:none">
-            🚧 You are on a beta or development build 🚧
-        </div>
-        
-        <div class="explanation">
-            <strong>Note:</strong> This tool is meant to facilitate the timely delivery of important messages during focus periods. Any abuse will result in access being revoked.
-        </div>
+{% block content %}
+    <h2 class="mb-3">Send a Priority Message</h2>
+    <p id="tokenStatus" class="text-muted"></p>
 
-        <form id="submitForm">
-            <input type="hidden" id="csrf_token" value="{{ csrf_token }}"/>
-
-            <div class="row g-2">
-                <div class="col-md-6">
-                    <label for="name" class="form-label">Name</label>
-                    <input type="text" id="name" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" class="form-control" required>
-                </div>
-            </div>
-
-            <label for="message" class="form-label mt-3">Message</label>
-            <textarea id="message" class="form-control" rows="4" required></textarea>
-
-            <div class="d-flex justify-content-between mt-3">
-                <button type="button" class="priority-btn btn btn-outline-primary flex-fill mx-1" data-value="standard">Standard</button>
-                <button type="button" class="priority-btn btn btn-warning flex-fill mx-1 selected" data-value="urgent">Urgent</button>
-                <button type="button" class="priority-btn btn btn-outline-danger flex-fill mx-1" data-value="immediate">Immediate</button>
-            </div>
-            
-            <div id="priorityDescriptions">
-                <div class="priority-explanation standard" id="standard"> <strong>Standard:</strong> Delivered after the current focus period. Substitute for instant messaging.</div>
-                <div class="priority-explanation urgent" id="urgent" style="display: block;"> <strong>Urgent:</strong> Delivered immediately except when sleeping, no signal, or during anaerobic workouts.</div>
-                <div class="priority-explanation immediate" id="immediate"> <strong>Immediate:</strong> Always delivered immediately except when there is no signal.</div>
-            </div>
-            
-            <button type="submit" class="btn btn-danger w-100 mt-3">Send Message</button>
-        </form>
-
-        <div class="footer text-center mt-4">
-            <a href="/">Home</a> | <a href="/about">About</a> | <a href="/apply">Apply</a>
-            <br>
-            <a href="https://github.com/differental/enviame" target="_blank">Enviame</a> v<span id="version">X.X.X</span>, With ❤️ by <a href="https://github.com/differental" target="_blank">Brian</a>
-        </div>
+    <div class="beta-warning" id="beta-warning" style="display:none">
+        🚧 You are on a beta or development build 🚧
+    </div>
+    
+    <div class="explanation">
+        <strong>Note:</strong> This tool is meant to facilitate the timely delivery of important messages during focus periods. Any abuse will result in access being revoked.
     </div>
 
-    <script src="/assets/utils.js"></script>
+    <form id="submitForm">
+        <input type="hidden" id="csrf_token" value="{{ csrf_token }}"/>
+
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" id="name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" class="form-control" required>
+            </div>
+        </div>
+
+        <label for="message" class="form-label mt-3">Message</label>
+        <textarea id="message" class="form-control" rows="4" required></textarea>
+
+        <div class="d-flex justify-content-between mt-3">
+            <button type="button" class="priority-btn btn btn-outline-primary flex-fill mx-1" data-value="standard">Standard</button>
+            <button type="button" class="priority-btn btn btn-warning flex-fill mx-1 selected" data-value="urgent">Urgent</button>
+            <button type="button" class="priority-btn btn btn-outline-danger flex-fill mx-1" data-value="immediate">Immediate</button>
+        </div>
+        
+        <div id="priorityDescriptions">
+            <div class="priority-explanation standard" id="standard"> <strong>Standard:</strong> Delivered after the current focus period. Substitute for instant messaging.</div>
+            <div class="priority-explanation urgent" id="urgent" style="display: block;"> <strong>Urgent:</strong> Delivered immediately except when sleeping, no signal, or during anaerobic workouts.</div>
+            <div class="priority-explanation immediate" id="immediate"> <strong>Immediate:</strong> Always delivered immediately except when there is no signal.</div>
+        </div>
+        
+        <button type="submit" class="btn btn-danger w-100 mt-3">Send Message</button>
+    </form>
+{% endblock %}
+
+{% block js %}
     <script>
         var apiEmail = null, apiName = null;
 
@@ -221,15 +140,7 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", fetchVersion);
         document.addEventListener("DOMContentLoaded", checkLogin);
         document.getElementById("submitForm").addEventListener("submit", submitForm);
-
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/assets/sw.js")
-                .then(() => console.log("Service Worker registered!"))
-                .catch(err => console.log("Service Worker registration failed:", err));
-        }
     </script>
-</body>
-</html>
+{% endblock %}

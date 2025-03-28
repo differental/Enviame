@@ -1,20 +1,34 @@
+use askama::Template;
 use axum::{
     extract::State,
     response::{Html, IntoResponse},
 };
 use axum_csrf::CsrfToken;
-use std::fs;
+use html_minifier::minify;
 
 use crate::state::AppState;
+
+#[derive(Template)]
+#[template(path = "index.html")]
+struct IndexPageTemplate {
+    csrf_token: String,
+}
 
 pub async fn serve_index(State(_state): State<AppState>, token: CsrfToken) -> impl IntoResponse {
     let csrf_token = token.authenticity_token().unwrap();
 
-    let html = fs::read_to_string("static/index.html")
-        .unwrap_or_else(|_| "Error loading page".to_string())
-        .replace("{{ csrf_token }}", &csrf_token);
+    let template = IndexPageTemplate { csrf_token };
+    let rendered = template.render().unwrap();
+    let minified = minify(&rendered).unwrap();
 
-    (token, Html(html)).into_response()
+    (token, Html(minified)).into_response()
+}
+
+#[derive(Template)]
+#[template(path = "apply.html")]
+struct ApplyPageTemplate {
+    csrf_token: String,
+    recaptcha_site_token: String,
 }
 
 pub async fn serve_apply_form(
@@ -22,21 +36,26 @@ pub async fn serve_apply_form(
     token: CsrfToken,
 ) -> impl IntoResponse {
     let csrf_token = token.authenticity_token().unwrap();
+    let recaptcha_site_token = env!("RECAPTCHA_SITE_KEY").to_string();
 
-    let html = fs::read_to_string("static/apply.html")
-        .unwrap_or_else(|_| "Error loading application page".to_string())
-        .replace("{{ csrf_token }}", &csrf_token)
-        .replace("{{ recaptcha_site_token }}", env!("RECAPTCHA_SITE_KEY"));
+    let template = ApplyPageTemplate {
+        csrf_token,
+        recaptcha_site_token,
+    };
+    let rendered = template.render().unwrap();
+    let minified = minify(&rendered).unwrap();
 
-    (token, Html(html)).into_response()
+    (token, Html(minified)).into_response()
 }
 
-pub async fn serve_about_page(State(_state): State<AppState>, token: CsrfToken) -> impl IntoResponse {
-    let csrf_token = token.authenticity_token().unwrap();
+#[derive(Template)]
+#[template(path = "about.html")]
+struct AboutPageTemplate;
 
-    let html = fs::read_to_string("static/about.html")
-        .unwrap_or_else(|_| "Error loading page".to_string())
-        .replace("{{ csrf_token }}", &csrf_token);
+pub async fn serve_about_page(State(_state): State<AppState>) -> impl IntoResponse {
+    let template = AboutPageTemplate;
+    let rendered = template.render().unwrap();
+    let minified = minify(&rendered).unwrap();
 
-    (token, Html(html)).into_response()
+    Html(minified).into_response()
 }

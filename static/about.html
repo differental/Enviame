@@ -1,84 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Enviame</title>
-    <link rel="manifest" href="/assets/site.webmanifest">
-    <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/assets/icons/favicon-32x32.png" type="image/png" sizes="32x32">
-    <link rel="icon" href="/assets/icons/favicon-16x16.png" type="image/png" sizes="16x16">
-    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            background-attachment: fixed;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            padding: 30px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
-            min-height: fit-content;
-        }
-        .footer {
-            font-size: 0.85rem;
-            color: #6c757d;
-            margin-top: 15px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container text-center">
-        <h2 class="mb-3">About Enviame</h2>
+{% extends "base.html" %}
 
-        <p><em><strong>TL;DR:</strong> Enviame is a priority messenger that filters important messages while respecting focus modes.</em></p>
+{% block title %}About Enviame{% endblock %}
 
-        <p>Designed for those who use "Focus Mode" but need urgent messages to bypass silencing, Enviame ensures trusted contacts can reach you while blocking distractions.</p>
+{% block content %}
+    <h2 class="mb-3">About Enviame</h2>
 
-        <p>Future integrations with smartwatches and other delivery methods are planned.</p>
+    <p><em><strong>TL;DR:</strong> Enviame is a priority messenger that filters important messages while respecting focus modes.</em></p>
 
-        <div class="explanation">
-            <strong>Tech Stack:</strong> Rust, PostgreSQL, Static HTML
-        </div>
+    <p>Designed for those who use "Focus Mode" but need urgent messages to bypass silencing, Enviame ensures trusted contacts can reach you while blocking distractions.</p>
 
-        <br>
+    <p>Future integrations with smartwatches and other delivery methods are planned.</p>
 
-        <div class="explanation">
-            <strong>Made by:</strong> <a href="https://github.com/differental" target="_blank">Brian</a>
-        </div>
-
-        <div class="explanation">
-            <strong>Source code:</strong> <a href="https://github.com/differental/enviame" target="_blank">https://github.com/differental/enviame</a>
-        </div>
-
-        <p>Favicon icon by <a href="https://www.freepik.com/icon/envelope_16910928" target="_blank">Freepik</a>.</p>
-        
-        <div class="footer text-center mt-4">
-            <a href="/">Home</a> | <a href="/about">About</a> | <a href="/apply">Apply</a>
-            <br>
-            <a href="https://github.com/differental/enviame" target="_blank">Enviame</a> v<span id="version">X.X.X</span>, With ❤️ by <a href="https://github.com/differental" target="_blank">Brian</a>
-        </div>
+    <div class="explanation">
+        <strong>Tech Stack:</strong> Rust, PostgreSQL, Static HTML
     </div>
 
-    <script src="/assets/utils.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", fetchVersion);
+    <div class="explanation">
+        <strong>Made by:</strong> <a href="https://github.com/differental" target="_blank">Brian</a>
+    </div>
 
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/assets/sw.js")
-                .then(() => console.log("Service Worker registered!"))
-                .catch(err => console.log("Service Worker registration failed:", err));
-        }
-    </script>
-</body>
-</html>
+    <div class="explanation">
+        <strong>Source code:</strong> <a href="https://github.com/differental/enviame" target="_blank">https://github.com/differental/enviame</a>
+    </div>
+
+    <div class="explanation">
+        Favicon by <a href="https://www.freepik.com/icon/envelope_16910928" target="_blank">Freepik</a>.
+    </div>
+{% endblock %}
