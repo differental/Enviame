@@ -5,7 +5,6 @@ use axum::{
 use axum_csrf::{CsrfConfig, CsrfLayer};
 use dotenvy::dotenv;
 use sqlx::PgPool;
-use worker::email_worker;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::{
@@ -23,6 +22,7 @@ use routes::{
 };
 
 mod worker;
+use worker::email_worker;
 
 mod utils;
 

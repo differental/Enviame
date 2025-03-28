@@ -1,48 +1,50 @@
-use lettre::transport::smtp::authentication::Credentials;
-use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
-use tokio::time::sleep;
+use lettre::message::header::ContentType;
+use lettre::transport::smtp::authentication::{Credentials, Mechanism};
+use lettre::{Message, SmtpTransport, Transport};
 use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
+use tokio::time::sleep;
 
 use crate::{state::AppState, utils::capitalize_first};
 
-async fn send_email(
-    from: &str,
-    to: &str,
-    subject: &str,
-    body: &str,
-) -> anyhow::Result<()> {
+async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::Result<()> {
     let smtp_server = env::var("SMTP_SERVER")?;
     let smtp_username = env::var("SMTP_USERNAME")?;
     let smtp_password = env::var("SMTP_PASSWORD")?;
+    let smtp_port = env::var("SMTP_PORT").ok().and_then(|s| s.parse::<u16>().ok()).unwrap_or(587);
 
     let email = Message::builder()
         .from(from.parse()?)
         .to(to.parse()?)
         .subject(subject)
+        .header(ContentType::TEXT_PLAIN)
         .body(body.to_string())?;
 
     let creds = Credentials::new(smtp_username, smtp_password);
 
-    let mailer = AsyncSmtpTransport::<Tokio1Executor>::relay(&smtp_server)?
+    let mailer = SmtpTransport::starttls_relay(&smtp_server)?
+        .port(smtp_port)
         .credentials(creds)
+        .authentication(vec![Mechanism::Plain])
         .build();
 
-    mailer.send(email).await?;
+    mailer.send(&email)?;
 
     Ok(())
 }
 
 pub async fn email_worker(state: AppState) {
     let notification_email = env!("NOTIFICATION_EMAIL");
-    
+
     let from_standard = std::env::var("SMTP_FROM").expect("Must include a SMTP_FROM email");
     let from_urgent_var = std::env::var("SMTP_FROM_URGENT");
     let from_immediate_var = std::env::var("SMTP_FROM_IMMEDIATE");
 
     let from_urgent = from_urgent_var.as_deref().unwrap_or(from_standard.as_ref());
-    let from_immediate = from_immediate_var.as_deref().unwrap_or(from_standard.as_ref());
+    let from_immediate = from_immediate_var
+        .as_deref()
+        .unwrap_or(from_standard.as_ref());
 
     let mut from_map = HashMap::new();
     from_map.insert("standard", from_standard.as_ref());
@@ -56,7 +58,7 @@ pub async fn email_worker(state: AppState) {
             .fetch_all(&state.db)
             .await
             .unwrap();
-        
+
         println!("Fetched. {} messages found.", messages.len());
 
         for msg in messages {
@@ -83,7 +85,13 @@ pub async fn email_worker(state: AppState) {
                 cargo_version,
             );
             println!("Sending Mail 1");
-            let notification_result = send_email(&from, notification_email, &notification_subject, &notification_body).await;
+            let notification_result = send_email(
+                &from,
+                notification_email,
+                &notification_subject,
+                &notification_body,
+            )
+            .await;
             println!("Mail 1 sent {}", notification_result.is_ok());
             if let Err(ref err) = notification_result {
                 println!("{:?}", err);
@@ -101,12 +109,20 @@ pub async fn email_worker(state: AppState) {
                 println!("{:?}", err);
             }
 
-            let new_status = if notification_result.is_ok() && user_result.is_ok() { "sent" } else { "failed" };
+            let new_status = if notification_result.is_ok() && user_result.is_ok() {
+                "sent"
+            } else {
+                "failed"
+            };
 
-            sqlx::query!("UPDATE messages SET status = $1 WHERE id = $2", new_status, msg.id)
-                .execute(&state.db)
-                .await
-                .unwrap();
+            sqlx::query!(
+                "UPDATE messages SET status = $1 WHERE id = $2",
+                new_status,
+                msg.id
+            )
+            .execute(&state.db)
+            .await
+            .unwrap();
 
             println!("Db updated");
 
