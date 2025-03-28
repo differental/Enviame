@@ -1,4 +1,4 @@
-use rand::{distr::Alphanumeric, rng, Rng};
+use rand::{Rng, distr::Alphanumeric, rng};
 
 pub fn generate_token() -> String {
     rng()

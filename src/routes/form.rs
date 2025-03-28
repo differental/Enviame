@@ -1,9 +1,4 @@
-use axum::{
-    extract::State,
-    response::IntoResponse,
-    http::StatusCode,
-    Json,
-};
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use axum_csrf::CsrfToken;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
@@ -58,7 +53,8 @@ pub async fn handle_form_submission(
 
     // If not prod or beta, do not modify database or send email
     if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
-     && std::env::var("DEPLOY_ENV").unwrap_or_default() != "beta" {
+        && std::env::var("DEPLOY_ENV").unwrap_or_default() != "beta"
+    {
         return (
             StatusCode::IM_A_TEAPOT,
             "Form submission ignored. This is not a production build.",
@@ -108,7 +104,13 @@ pub async fn handle_form_submission(
         );
         let body = format!(
             "Message details:\n\n---Start of Message---\n{}\n---End of Message---\n\nPriority: {}\nName: {}\nEmail: {}\nStatus: {}\nMessage delivered by Enviame {}, {}",
-            payload_clone.message, priority_capitalised, payload_clone.name, payload_clone.email, sender_status, cargo_version, utc_now
+            payload_clone.message,
+            priority_capitalised,
+            payload_clone.name,
+            payload_clone.email,
+            sender_status,
+            cargo_version,
+            utc_now
         );
         let _ = send_email(master_email, &subject, &body).await;
 

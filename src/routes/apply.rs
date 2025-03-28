@@ -1,8 +1,8 @@
 use axum::{
-    extract::State,
-    response::IntoResponse,
-    http::{header, StatusCode},
     Json,
+    extract::State,
+    http::{StatusCode, header},
+    response::IntoResponse,
 };
 use axum_csrf::CsrfToken;
 use reqwest::Client;
@@ -21,7 +21,7 @@ pub struct ApplyRequest {
 
 #[derive(Deserialize)]
 struct RecaptchaResponse {
-    success: bool
+    success: bool,
 }
 
 pub async fn handle_apply(
@@ -36,7 +36,8 @@ pub async fn handle_apply(
 
     // If not prod or beta, do not modify database
     if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
-     && std::env::var("DEPLOY_ENV").unwrap_or_default() != "beta" {
+        && std::env::var("DEPLOY_ENV").unwrap_or_default() != "beta"
+    {
         return (
             StatusCode::IM_A_TEAPOT,
             "Account application ignored. This is not a production build.",
@@ -77,7 +78,7 @@ pub async fn handle_apply(
                     {
                         Ok(_) => (),
                         Err(_) => {
-                            return (StatusCode::BAD_REQUEST, "Duplicate Email").into_response()
+                            return (StatusCode::BAD_REQUEST, "Duplicate Email").into_response();
                         }
                     }
 

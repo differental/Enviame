@@ -1,6 +1,6 @@
 use axum::{
-    routing::{get, post},
     Router,
+    routing::{get, post},
 };
 use axum_csrf::{CsrfConfig, CsrfLayer};
 use dotenvy::dotenv;
