@@ -126,18 +126,35 @@
                 return;
             }
 
-            const response = await fetch("/api/submit", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ csrf_token, name, email, message, token, priority: selectedPriority })
-            });
-            const msg = await response.text();
+            Swal.fire({
+                title: null,
+                text: null,
+                showConfirmButton: false,
+                timerProgressBar: true,
+                willOpen: () => {
+                    Swal.showLoading();
+                },
+                didOpen: async () => {
+                    try {
+                        const response = await fetch("/api/submit", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ csrf_token, name, email, message, token, priority: selectedPriority })
+                        });
 
-            if (response.ok) {
-                showSwal("Submission Successful!", msg, "success", "/");
-            } else {
-                showSwal("Submission Failed", msg, "error", "/", 5000);
-            }
+                        const msg = await response.text();
+
+                        if (response.ok) {
+                            showSwal("Submission Successful!", "Message submitted successfully!", "success", "/");
+                        } else {
+                            showSwal("Submission Failed", msg, "error", "/", 5000);
+                        }
+                    } catch (error) {
+                        showSwal("Request Failed", "Unknown Error", "error", "/", 5000);
+                    }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
         }
 
         document.addEventListener("DOMContentLoaded", checkLogin);

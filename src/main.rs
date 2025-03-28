@@ -5,6 +5,7 @@ use axum::{
 use axum_csrf::{CsrfConfig, CsrfLayer};
 use dotenvy::dotenv;
 use sqlx::PgPool;
+use worker::email_worker;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::{
@@ -20,6 +21,8 @@ use routes::{
     pages::{serve_about_page, serve_apply_form, serve_index},
     version::handle_version,
 };
+
+mod worker;
 
 mod utils;
 
@@ -42,6 +45,11 @@ async fn main() -> Result<(), sqlx::Error> {
         .expect("APP_PORT must be a valid number");
 
     let csrf_config = CsrfConfig::default();
+
+    let state_clone = state.clone();
+    tokio::spawn(async move {
+        email_worker(state_clone).await;
+    });
 
     let app = Router::new()
         .route("/", get(serve_index))

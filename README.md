@@ -34,3 +34,34 @@ Features that integrate Enviame with smartwatches and other delivery options are
 
 - Backend: Rust (w/ Axum), PostgreSQL
 - Frontend: Static HTML (w/ Bootstrap UI)
+
+## Database Schema
+
+`messages`:
+
+```text
+  column_name   |        data_type         | is_nullable |            column_default            
+----------------+--------------------------+-------------+--------------------------------------
+ id             | integer                  | NO          | nextval('messages_id_seq'::regclass)
+ submitted_time | timestamp with time zone | NO          | CURRENT_TIMESTAMP
+ user_uid       | integer                  | YES         | 
+ name           | text                     | NO          | 
+ email          | text                     | NO          | 
+ message        | text                     | NO          | 
+ priority       | text                     | NO          | 
+ status         | text                     | NO          | 'pending'::text
+ sender         | text                     | NO          | 
+```
+
+`users`:
+
+```text
+ column_name |        data_type         | is_nullable |           column_default           
+-------------+--------------------------+-------------+------------------------------------
+ uid         | integer                  | NO          | nextval('users_uid_seq'::regclass)
+ added_time  | timestamp with time zone | NO          | CURRENT_TIMESTAMP
+ name        | text                     | NO          | 
+ email       | text                     | NO          | 
+ token       | text                     | NO          | 
+ verified    | boolean                  | NO          | 
+```

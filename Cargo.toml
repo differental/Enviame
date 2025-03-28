@@ -9,7 +9,7 @@ axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-native-tls"] }
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-native-tls", "time"] }
 lettre = { version = "0.11", features = ["smtp-transport", "tokio1-native-tls"] }
 dotenvy = "0.15"
 tower-http = { version = "0.6", features = ["cors", "fs"] }
@@ -20,3 +20,4 @@ axum_csrf = { version = "0.11.0", features = ["layer"] }
 tracing-subscriber = "0.3.19"
 askama = "0.13.0"
 html-minifier = "5.0.0"
+anyhow = "1.0.97"
