@@ -1,32 +1,42 @@
-<h1 align="center">Enviame</h1>
 
-<p align="center">
-  <a href="https://github.com/differental/enviame/actions/workflows/deploy_prod.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_prod.yml?label=Production&style=for-the-badge" />
-  </a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/differental/enviame/actions/workflows/deploy_main.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_main.yml?label=Beta&style=for-the-badge" />
-  </a>
-</p>
 
-<p align="center">
-  <a href="https://github.com/differental/enviame/tree/main">
-    <img src="https://img.shields.io/github/last-commit/differental/enviame?style=for-the-badge" />
-  </a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/differental/enviame/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/differental/enviame?style=for-the-badge" />
-  </a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://www.rust-lang.org/">
-    <img src="https://img.shields.io/badge/Made%20with-rust-red?style=for-the-badge" />
-  </a>
-</p>
-
-<p align="center">Priority Messenger</p>
-
-<p align="center">Demo: <a href="https://msg-beta.brianc.tech">https://msg-beta.brianc.tech</a></p>
+<div align="center">
+  <h1>Enviame</h1>
+  <h3>Priority Messenger</h3>
+  <p>Demo: <a href="https://msg-beta.brianc.tech">https://msg-beta.brianc.tech</a></p>
+  <p>
+    <picture>
+      <a href="https://github.com/differental/enviame/actions/workflows/deploy_prod.yml">
+        <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_prod.yml?label=Production&style=for-the-badge" />
+      </a>
+    </picture>
+    <span>&nbsp;&nbsp;&nbsp;</span>
+    <picture>
+      <a href="https://github.com/differental/enviame/actions/workflows/deploy_main.yml">
+        <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_main.yml?label=Beta&style=for-the-badge">
+      </a>
+    </picture>
+  </p>
+  <p>
+    <picture>
+      <a href="https://github.com/differental/enviame/tree/main">
+        <img src="https://img.shields.io/github/last-commit/differental/enviame?style=for-the-badge" />
+      </a>
+    </picture>
+    <span>&nbsp;&nbsp;&nbsp;</span>
+    <picture>
+      <a href="https://github.com/differental/enviame/blob/main/LICENSE">
+        <img src="https://img.shields.io/github/license/differental/enviame?style=for-the-badge&color=499dd0" />
+      </a>
+    </picture>
+    <span>&nbsp;&nbsp;&nbsp;</span>
+    <picture>
+      <a href="https://www.rust-lang.org/">
+        <img src="https://img.shields.io/badge/Made%20with-rust-red?style=for-the-badge" />
+      </a>
+    </picture>
+  </p>
+</div>
 
 ## Introduction
 
