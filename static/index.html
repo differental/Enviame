@@ -109,6 +109,28 @@
             });
         });
 
+        const toastr_config_info = {
+            positionClass: 'toast-top-right',
+            timeOut: 0,
+            extendedTimeOut: 0,
+            tapToDismiss: false,
+            preventDuplicates: true,
+            newestOnTop: true,
+            showMethod: "show",
+            hideMethod: "hide"
+        };
+        const toastr_config_success_or_fail = {
+            positionClass: 'toast-top-right',
+            timerProgressBar: true,
+            timeOut: 10000,
+            extendedTimeOut: 10000,
+            tapToDismiss: false,
+            preventDuplicates: true,
+            newestOnTop: true,
+            showMethod: "show",
+            hideMethod: "hide"
+        };
+
         async function submitForm(event) {
             event.preventDefault();
 
@@ -151,16 +173,7 @@
                             
                             const toastr_id = toastr.info(
                                 `Your message #${mid} has been added to the delivery queue`, 'Delivering...',
-                                {
-                                    positionClass: 'toast-top-right',
-                                    timeOut: 0,
-                                    extendedTimeOut: 0,
-                                    tapToDismiss: false,
-                                    preventDuplicates: true,
-                                    newestOnTop: true,
-                                    showMethod: "show",
-                                    hideMethod: "hide"
-                                }
+                                toastr_config_info
                             );
                             
                             pollMessageStatus(mid, mid_hash, toastr_id);
@@ -177,39 +190,42 @@
         }
 
         function pollMessageStatus(mid, mid_hash, toastr_id) {
+            let sending_toastr_id = null;
+
             let interval = setInterval(async () => {
                 try {
                     const response = await fetch(`/api/message?mid=${mid}&mid_hash=${mid_hash}`);
                     const data = await response.json();
 
-                    if (data.status && data.status !== "pending") {
-                        clearInterval(interval);
-                        toastr.clear(toastr_id);
+                    if (data.status) {
+                        if (data.status === "sending" && sending_toastr_id === null) {
+                            // Send new toastr
+                            toastr.clear(toastr_id);
+                            sending_toastr_id = toastr.info(
+                                `Your message #${mid} is being delivered`, 'Delivering...',
+                                toastr_config_info
+                            );
+                        }
+                        if (data.status !== "pending" && data.status !== "sending") {
+                            clearInterval(interval);
+                            toastr.clear(sending_toastr_id);
 
-                        if (data.status === "sent") {
-                            toastr.success(`Your message #${mid} has been delivered successfully`, 'Success', {
-                                positionClass: 'toast-top-right',
-                                timerProgressBar: true,
-                                timeOut: 10000,
-                                extendedTimeOut: 10000,
-                                tapToDismiss: false,
-                                preventDuplicates: true,
-                                newestOnTop: true,
-                                showMethod: "show",
-                                hideMethod: "hide"
-                            });
-                        } else if (data.status === "failed") {
-                            toastr.error(`Your message #${mid} could not be delivered`, 'Delivery Failed', {
-                                positionClass: 'toast-top-right',
-                                timerProgressBar: true,
-                                timeOut: 10000,
-                                extendedTimeOut: 10000,
-                                tapToDismiss: false,
-                                preventDuplicates: true,
-                                newestOnTop: true,
-                                showMethod: "show",
-                                hideMethod: "hide"
-                            });
+                            if (data.status === "sent") {
+                                toastr.success(
+                                    `Your message #${mid} has been delivered successfully`, 'Success', 
+                                    toastr_config_success_or_fail
+                                );
+                            } else if (data.status === "failed") {
+                                toastr.error(
+                                    `Your message #${mid} could not be delivered`, 'Delivery Failed', 
+                                    toastr_config_success_or_fail
+                                );
+                            } else {
+                                toastr.warning(
+                                    `We could not verify the delivery status of your message #${mid}`, 'Unknown Status', 
+                                    toastr_config_success_or_fail
+                                );
+                            }
                         }
                     }
                 } catch (error) {

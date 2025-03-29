@@ -234,6 +234,14 @@ pub async fn email_worker(state: AppState) {
 
             // Send email in new thread
             task::spawn(async move {
+                sqlx::query!(
+                    "UPDATE messages SET status = 'sending' WHERE id = $1",
+                    msg.id
+                )
+                .execute(&state.db)
+                .await
+                .unwrap();
+
                 let mut is_ok = true;
 
                 let notification_result = send_email(
