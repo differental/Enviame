@@ -4,7 +4,7 @@ use lettre::{Message, SmtpTransport, Transport};
 use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
-use time::format_description;
+use time::{UtcDateTime, format_description};
 use tokio::task;
 use tokio::time::sleep;
 
@@ -12,8 +12,7 @@ use crate::{state::AppState, utils::capitalize_first};
 
 static NOTIFICATION_EMAIL: &str = env!("NOTIFICATION_EMAIL");
 
-static SUBMITTED_TIME_FORMAT: &str = "[year]-[month]-[day] [hour]:[minute]:[second]";
-static CURRENT_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+static TIME_FORMAT: &str = "[year]-[month]-[day] [hour]:[minute]:[second]";
 
 static USER_EMAIL_TEMPLATE: &str = r#"<!DOCTYPE html>
 <html>
@@ -174,14 +173,15 @@ async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::
 pub async fn email_worker(state: AppState) {
     let from_standard = std::env::var("SMTP_FROM").expect("Must include a SMTP_FROM email");
     let from_urgent = std::env::var("SMTP_FROM_URGENT").unwrap_or_else(|_| from_standard.clone());
-    let from_immediate = std::env::var("SMTP_FROM_IMMEDIATE").unwrap_or_else(|_| from_standard.clone());
+    let from_immediate =
+        std::env::var("SMTP_FROM_IMMEDIATE").unwrap_or_else(|_| from_standard.clone());
 
     let mut from_map = HashMap::new();
     from_map.insert("standard".to_string(), from_standard);
     from_map.insert("urgent".to_string(), from_urgent);
     from_map.insert("immediate".to_string(), from_immediate);
 
-    let submitted_time_format = format_description::parse(SUBMITTED_TIME_FORMAT).unwrap();
+    let time_format = format_description::parse(TIME_FORMAT).unwrap();
 
     let cargo_version = env!("CARGO_PKG_VERSION").to_string();
 
@@ -201,13 +201,14 @@ pub async fn email_worker(state: AppState) {
             let state = state.clone();
 
             // Properties
-            let from = from_map.get(msg.priority.as_str())
+            let from = from_map
+                .get(msg.priority.as_str())
                 .cloned()
                 .expect("Priority must be one of the three options");
             let priority_capitalised = capitalize_first(msg.priority);
             let sender_type_capitalised = capitalize_first(msg.sender);
-            let utc_now = chrono::Utc::now().format(CURRENT_TIME_FORMAT).to_string();
-            let submitted_time = msg.submitted_time.to_utc().format(&submitted_time_format).unwrap();
+            let utc_now = UtcDateTime::now().format(&time_format).unwrap();
+            let submitted_time = msg.submitted_time.to_utc().format(&time_format).unwrap();
 
             // Email contents
             let notification_subject = format!(

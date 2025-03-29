@@ -1,6 +1,6 @@
 [package]
 name = "enviame"
-version = "1.0.5"
+version = "1.0.6"
 edition = "2024"
 license = "GPL-3.0"
 
@@ -15,7 +15,6 @@ dotenvy = "0.15"
 tower-http = { version = "0.6", features = ["cors", "fs"] }
 rand = "0.9.0"
 reqwest = { version = "0.12.15", features = ["json"] }
-chrono = "0.4.40"
 axum_csrf = { version = "0.11.0", features = ["layer"] }
 tracing-subscriber = "0.3.19"
 askama = "0.13.0"
