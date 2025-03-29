@@ -5,9 +5,15 @@ use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
 use time::format_description;
+use tokio::task;
 use tokio::time::sleep;
 
 use crate::{state::AppState, utils::capitalize_first};
+
+static NOTIFICATION_EMAIL: &str = env!("NOTIFICATION_EMAIL");
+
+static SUBMITTED_TIME_FORMAT: &str = "[year]-[month]-[day] [hour]:[minute]:[second]";
+static CURRENT_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
 static USER_EMAIL_TEMPLATE: &str = r#"<!DOCTYPE html>
 <html>
@@ -166,23 +172,18 @@ async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::
 }
 
 pub async fn email_worker(state: AppState) {
-    let notification_email = env!("NOTIFICATION_EMAIL");
-
     let from_standard = std::env::var("SMTP_FROM").expect("Must include a SMTP_FROM email");
-    let from_urgent_var = std::env::var("SMTP_FROM_URGENT");
-    let from_immediate_var = std::env::var("SMTP_FROM_IMMEDIATE");
-
-    let from_urgent = from_urgent_var.as_deref().unwrap_or(from_standard.as_ref());
-    let from_immediate = from_immediate_var
-        .as_deref()
-        .unwrap_or(from_standard.as_ref());
+    let from_urgent = std::env::var("SMTP_FROM_URGENT").unwrap_or_else(|_| from_standard.clone());
+    let from_immediate = std::env::var("SMTP_FROM_IMMEDIATE").unwrap_or_else(|_| from_standard.clone());
 
     let mut from_map = HashMap::new();
-    from_map.insert("standard", from_standard.as_ref());
-    from_map.insert("urgent", from_urgent);
-    from_map.insert("immediate", from_immediate);
+    from_map.insert("standard".to_string(), from_standard);
+    from_map.insert("urgent".to_string(), from_urgent);
+    from_map.insert("immediate".to_string(), from_immediate);
 
-    let cargo_version = env!("CARGO_PKG_VERSION");
+    let submitted_time_format = format_description::parse(SUBMITTED_TIME_FORMAT).unwrap();
+
+    let cargo_version = env!("CARGO_PKG_VERSION").to_string();
 
     loop {
         let messages = sqlx::query!("SELECT id, name, email, message, priority, sender, submitted_time FROM messages WHERE status = 'pending'")
@@ -190,16 +191,25 @@ pub async fn email_worker(state: AppState) {
             .await
             .unwrap();
 
+        if messages.is_empty() {
+            sleep(Duration::from_secs(10)).await;
+            continue;
+        }
+
         for msg in messages {
-            let priority = msg.priority.as_str();
-            let from = from_map[priority];
+            // Clone state for new thread
+            let state = state.clone();
+
+            // Properties
+            let from = from_map.get(msg.priority.as_str())
+                .cloned()
+                .expect("Priority must be one of the three options");
             let priority_capitalised = capitalize_first(msg.priority);
             let sender_type_capitalised = capitalize_first(msg.sender);
-            let utc_now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
-            let format =
-                format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap();
-            let submitted_time = msg.submitted_time.to_utc().format(&format).unwrap();
+            let utc_now = chrono::Utc::now().format(CURRENT_TIME_FORMAT).to_string();
+            let submitted_time = msg.submitted_time.to_utc().format(&submitted_time_format).unwrap();
 
+            // Email contents
             let notification_subject = format!(
                 "[Enviame] {} Message from {}({})",
                 priority_capitalised, msg.name, sender_type_capitalised
@@ -214,18 +224,6 @@ pub async fn email_worker(state: AppState) {
                 .replace("{{delivered_time}}", &utc_now)
                 .replace("{{version}}", &cargo_version);
 
-            let notification_result = send_email(
-                &from,
-                notification_email,
-                &notification_subject,
-                &notification_body,
-            )
-            .await;
-
-            if let Err(ref err) = notification_result {
-                eprintln!("{:?}", err);
-            }
-
             let user_subject = format!("[Enviame] {} Message Delivered", priority_capitalised);
             let user_body = USER_EMAIL_TEMPLATE
                 .replace("{{name}}", &msg.name)
@@ -233,29 +231,43 @@ pub async fn email_worker(state: AppState) {
                 .replace("{{message}}", &msg.message.replace("\n", "<br>"))
                 .replace("{{version}}", &cargo_version);
 
-            let user_result = send_email(&from, &msg.email, &user_subject, &user_body).await;
+            // Send email in new thread
+            task::spawn(async move {
+                let mut is_ok = true;
 
-            if let Err(ref err) = user_result {
-                eprintln!("{:?}", err);
-            }
+                let notification_result = send_email(
+                    &from,
+                    NOTIFICATION_EMAIL,
+                    &notification_subject,
+                    &notification_body,
+                )
+                .await;
 
-            let new_status = if notification_result.is_ok() && user_result.is_ok() {
-                "sent"
-            } else {
-                "failed"
-            };
+                if let Err(ref err) = notification_result {
+                    eprintln!("{:?}", err);
+                    is_ok = false;
+                }
 
-            sqlx::query!(
-                "UPDATE messages SET status = $1 WHERE id = $2",
-                new_status,
-                msg.id
-            )
-            .execute(&state.db)
-            .await
-            .unwrap();
+                let user_result = send_email(&from, &msg.email, &user_subject, &user_body).await;
+
+                if let Err(ref err) = user_result {
+                    eprintln!("{:?}", err);
+                    is_ok = false;
+                }
+
+                let new_status = if is_ok { "sent" } else { "failed" };
+
+                sqlx::query!(
+                    "UPDATE messages SET status = $1 WHERE id = $2",
+                    new_status,
+                    msg.id
+                )
+                .execute(&state.db)
+                .await
+                .unwrap();
+            });
 
             sleep(Duration::from_secs(10)).await;
         }
-        sleep(Duration::from_secs(10)).await;
     }
 }
