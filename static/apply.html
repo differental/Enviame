@@ -10,23 +10,27 @@
 {% block content %}
     <h2 class="mb-3">Account Registration</h2>
 
-    <div class="beta-warning" id="beta-warning">
+    <div class="beta-warning" id="beta-warning" style="display:none">
         🚧 You are on a beta or development build 🚧
     </div>
 
     <form id="applyForm">
         <input type="hidden" id="csrf_token" value="{{ csrf_token }}"/>
 
-        <div class="mb-3 text-start">
-            <label for="name" class="form-label">Name:</label>
-            <input type="text" id="name" class="form-control" required>
-        </div>
-        <div class="mb-3 text-start">
-            <label for="email" class="form-label">Email:</label>
-            <input type="email" id="email" class="form-control" required>
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" id="name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" class="form-control" required>
+            </div>
         </div>
 
-        <div class="g-recaptcha mb-3" data-sitekey="{{ recaptcha_site_token }}"></div>
+        <div class="g-recaptcha-wrapper">
+            <div class="g-recaptcha mb-3" data-sitekey="{{ recaptcha_site_token }}"></div>
+        </div>
         
         <button type="submit" class="btn btn-primary w-100">Submit</button>
     </form>

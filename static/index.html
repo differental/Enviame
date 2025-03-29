@@ -9,14 +9,14 @@
 
 {% block content %}
     <h2 class="mb-3">Send a Priority Message</h2>
-    <p id="tokenStatus" class="text-muted"></p>
+    <div id="tokenStatus" class="token-status" style="display:none"></div>
 
     <div class="beta-warning" id="beta-warning" style="display:none">
         🚧 You are on a beta or development build 🚧
     </div>
     
-    <div class="explanation">
-        <strong>Note:</strong> This tool is meant to facilitate the timely delivery of important messages during focus periods. Any abuse will result in access being revoked.
+    <div class="explanation" id="guest-note">
+        This tool is intended for use exclusively during focus periods. Please use it only when you are unable to reach me through instant messaging.
     </div>
 
     <form id="submitForm">
@@ -72,7 +72,15 @@
                 document.getElementById("email").value = data.email;
                 document.getElementById("name").disabled = true;
                 document.getElementById("email").disabled = true;
-                document.getElementById("tokenStatus").innerText = `Logged in as: ${data.name}`;
+
+                const tokenStatus = document.getElementById("tokenStatus");
+                tokenStatus.innerHTML = `Logged in as ${data.name} <img id="verifiedIcon" src="/assets/img/tick_blue.svg" width="26" height="26" style="display: inline;">`;
+                if (data.verified) {
+                    document.getElementById("verifiedIcon").src = "/assets/img/tick_gold.svg";
+                }
+                tokenStatus.style.display = "block";
+
+                document.getElementById("guest-note").style.display = "none";
 
                 if (new URLSearchParams(window.location.search).get("token")) {
                     setToken(token);

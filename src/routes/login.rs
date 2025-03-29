@@ -17,6 +17,7 @@ pub struct LoginRequest {
 struct LoginResponse {
     email: Option<String>,
     name: Option<String>,
+    verified: Option<bool>,
 }
 
 pub async fn handle_login(
@@ -24,7 +25,7 @@ pub async fn handle_login(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let result = sqlx::query!(
-        "SELECT email, name FROM users WHERE token = $1",
+        "SELECT email, name, verified FROM users WHERE token = $1",
         params.token
     )
     .fetch_optional(&state.db)
@@ -40,12 +41,14 @@ pub async fn handle_login(
             Json(LoginResponse {
                 email: Some(user.email),
                 name: Some(user.name),
+                verified: Some(user.verified)
             }),
         )
             .into_response(),
         None => Json(LoginResponse {
             email: None,
             name: None,
+            verified: None
         })
         .into_response(),
     }
