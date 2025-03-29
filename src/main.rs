@@ -17,6 +17,7 @@ use routes::{
     apply::handle_apply,
     form::handle_form_submission,
     login::handle_login,
+    message::handle_message_query,
     pages::{serve_about_page, serve_apply_form, serve_index},
     version::handle_version,
 };
@@ -59,6 +60,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .route("/api/submit", post(handle_form_submission))
         .route("/api/apply", post(handle_apply))
         .route("/api/version", get(handle_version))
+        .route("/api/message", get(handle_message_query))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(CorsLayer::new().allow_origin(Any))
         .layer(CsrfLayer::new(csrf_config))

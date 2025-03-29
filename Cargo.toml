@@ -22,3 +22,6 @@ askama = "0.13.0"
 html-minifier = "5.0.0"
 anyhow = "1.0.97"
 time = { version = "0.3.41", features = ["formatting"] }
+sha2 = "0.10.8"
+hmac = "0.12.1"
+hex = "0.4.3"

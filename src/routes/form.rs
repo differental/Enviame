@@ -1,8 +1,8 @@
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use axum_csrf::CsrfToken;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use crate::state::AppState;
+use crate::{state::AppState, utils::generate_hash};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -30,6 +30,12 @@ pub struct FormData {
     name: String,
     message: String,
     priority: MessagePriority,
+}
+
+#[derive(Serialize)]
+struct SubmissionResponse {
+    mid: i32,
+    mid_hash: String,
 }
 
 pub async fn handle_form_submission(
@@ -80,6 +86,14 @@ pub async fn handle_form_submission(
     .await
     .expect("Failed to insert data")
     .id;
+    let mid_hash = generate_hash(&message_id.to_string());
 
-    (StatusCode::OK, Json(message_id)).into_response()
+    (
+        StatusCode::OK,
+        Json(SubmissionResponse {
+            mid: message_id,
+            mid_hash,
+        }),
+    )
+        .into_response()
 }

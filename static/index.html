@@ -142,11 +142,12 @@
                             body: JSON.stringify({ csrf_token, name, email, message, token, priority: selectedPriority })
                         });
 
-                        const msg = await response.text();
-
                         if (response.ok) {
+                            const { mid, mid_hash } = await response.json();
                             showSwal("Submission Successful!", "Message submitted successfully!", "success", "/");
+                            //console.log(mid, mid_hash);
                         } else {
+                            const msg = await response.text();
                             showSwal("Submission Failed", msg, "error", "/", 5000);
                         }
                     } catch (error) {

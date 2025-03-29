@@ -9,7 +9,7 @@ use reqwest::Client;
 use serde::Deserialize;
 use std::env;
 
-use crate::{state::AppState, utils::generate_token};
+use crate::{state::AppState, utils::generate_random_token};
 
 #[derive(Deserialize)]
 pub struct ApplyRequest {
@@ -64,7 +64,7 @@ pub async fn handle_apply(
         Ok(response) => {
             if let Ok(recaptcha_response) = response.json::<RecaptchaResponse>().await {
                 if recaptcha_response.success {
-                    let token = generate_token();
+                    let token = generate_random_token();
 
                     match sqlx::query!(
                         "INSERT INTO users (email, name, token, verified) VALUES ($1, $2, $3, $4)",
