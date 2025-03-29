@@ -4,6 +4,7 @@
 
 {% block scripts %}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
 {% endblock %}
 
 {% block content %}
@@ -52,6 +53,7 @@
 {% endblock %}
 
 {% block js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         var apiEmail = null, apiName = null;
 
@@ -144,8 +146,20 @@
 
                         if (response.ok) {
                             const { mid, mid_hash } = await response.json();
-                            showSwal("Submission Successful!", "Message submitted successfully!", "success", "/");
-                            //console.log(mid, mid_hash);
+                            showSwal("Submission Successful!", "Message submitted successfully!", "success");
+                            document.getElementById("message").value = "";
+                            
+                            toastr.info(
+                                'Your message has been added to the delivery queue', 'Delivering...',
+                                {
+                                    positionClass: 'toast-top-right',
+                                    timeOut: 0,
+                                    extendedTimeOut: 0,
+                                    closeButton: true
+                                }
+                            );
+                            
+                            pollMessageStatus(mid, mid_hash);
                         } else {
                             const msg = await response.text();
                             showSwal("Submission Failed", msg, "error", "/", 5000);
@@ -156,6 +170,36 @@
                 },
                 allowOutsideClick: () => !Swal.isLoading()
             });
+        }
+
+        function pollMessageStatus(mid, mid_hash) {
+            let interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/message?mid=${mid}&mid_hash=${mid_hash}`);
+                    const data = await response.json();
+
+                    if (data.status && data.status !== "pending") {
+                        clearInterval(interval);
+                        toastr.clear();
+
+                        if (data.status === "sent") {
+                            toastr.success('Your message has been successfully delivered', 'Success', {
+                                positionClass: 'toast-top-right',
+                                timerProgressBar: true,
+                                timeOut: 10000,
+                            });
+                        } else if (data.status === "failed") {
+                            toastr.error('Your message could not be delivered', 'Delivery Failed', {
+                                positionClass: 'toast-top-right',
+                                timerProgressBar: true,
+                                timeOut: 10000,
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking message status:", error);
+                }
+            }, 5000); // check every 5s
         }
 
         document.addEventListener("DOMContentLoaded", checkLogin);
