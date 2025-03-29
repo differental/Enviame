@@ -85,7 +85,7 @@ pub async fn handle_apply(
                     let cookie_header = format!("token={}; Path=/; Secure; SameSite=Strict", token);
 
                     return (
-                        StatusCode::OK,
+                        StatusCode::CREATED,
                         [(header::SET_COOKIE, cookie_header)],
                         "Registration submitted successfully!",
                     )

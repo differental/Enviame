@@ -82,14 +82,14 @@ pub async fn handle_form_submission(
         payload.message,
         payload.priority.to_string()
     )
-    .fetch_one(&state.db)
-    .await
-    .expect("Failed to insert data")
-    .id;
+        .fetch_one(&state.db)
+        .await
+        .expect("Failed to insert data")
+        .id;
     let mid_hash = generate_hash(&message_id.to_string());
 
     (
-        StatusCode::OK,
+        StatusCode::ACCEPTED,
         Json(SubmissionResponse {
             mid: message_id,
             mid_hash,

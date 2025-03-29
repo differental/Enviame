@@ -28,18 +28,19 @@ pub async fn handle_message_query(
         return (StatusCode::BAD_REQUEST, "Hash validation failed.").into_response();
     }
 
-    let status = sqlx::query!("SELECT status FROM messages WHERE id = $1", params.mid)
-        .fetch_one(&state.db)
+    match sqlx::query!("SELECT status FROM messages WHERE id = $1", params.mid)
+        .fetch_optional(&state.db)
         .await
         .unwrap()
-        .status;
-
-    (
-        StatusCode::OK,
-        Json(MessageStatusResponse {
-            mid: params.mid,
-            status,
-        }),
-    )
-        .into_response()
+    {
+        Some(rec) => (
+            StatusCode::OK,
+            Json(MessageStatusResponse {
+                mid: params.mid,
+                status: rec.status,
+            }),
+        )
+            .into_response(),
+        None => (StatusCode::BAD_REQUEST, "Requested message does not exist.").into_response(),
+    }
 }
