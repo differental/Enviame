@@ -8,6 +8,16 @@
   <a href="https://github.com/differental/enviame/actions/workflows/deploy_main.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_main.yml?label=Beta&style=for-the-badge" />
   </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/differental/enviame/tree/main">
+    <img src="https://img.shields.io/github/last-commit/differental/enviame?style=for-the-badge" />
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/differental/enviame/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/differental/enviame?style=for-the-badge" />
+  </a>
   &nbsp;&nbsp;&nbsp;
   <a href="https://www.rust-lang.org/">
     <img src="https://img.shields.io/badge/Made%20with-rust-red?style=for-the-badge" />
