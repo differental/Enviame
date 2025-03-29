@@ -81,7 +81,5 @@ pub async fn handle_form_submission(
     .expect("Failed to insert data")
     .id;
 
-    println!("Sent: {message_id}");
-
     (StatusCode::OK, Json(message_id)).into_response()
 }
