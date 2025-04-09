@@ -1,6 +1,7 @@
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::{Message, SmtpTransport, Transport};
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
@@ -10,7 +11,8 @@ use tokio::time::sleep;
 
 use crate::{state::AppState, utils::capitalize_first};
 
-static NOTIFICATION_EMAIL: &str = env!("NOTIFICATION_EMAIL");
+static NOTIFICATION_EMAIL: Lazy<String> =
+    Lazy::new(|| env::var("NOTIFICATION_EMAIL").expect("NOTIFICATION_EMAIL must be set"));
 
 static TIME_FORMAT: &str = "[year]-[month]-[day] [hour]:[minute]:[second]";
 
@@ -142,9 +144,9 @@ static NOTIFICATION_EMAIL_TEMPLATE: &str = r#"<!DOCTYPE html>
 </html>"#;
 
 async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::Result<()> {
-    let smtp_server = env::var("SMTP_SERVER")?;
-    let smtp_username = env::var("SMTP_USERNAME")?;
-    let smtp_password = env::var("SMTP_PASSWORD")?;
+    let smtp_server = env::var("SMTP_SERVER").expect("SMTP_SERVER must be set");
+    let smtp_username = env::var("SMTP_USERNAME").expect("SMTP_USERNAME must be set");
+    let smtp_password = env::var("SMTP_PASSWORD").expect("SMTP_PASSWORD must be set");
     let smtp_port = env::var("SMTP_PORT")
         .ok()
         .and_then(|s| s.parse::<u16>().ok())
@@ -171,10 +173,9 @@ async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::
 }
 
 pub async fn email_worker(state: AppState) {
-    let from_standard = std::env::var("SMTP_FROM").expect("Must include a SMTP_FROM email");
-    let from_urgent = std::env::var("SMTP_FROM_URGENT").unwrap_or_else(|_| from_standard.clone());
-    let from_immediate =
-        std::env::var("SMTP_FROM_IMMEDIATE").unwrap_or_else(|_| from_standard.clone());
+    let from_standard = env::var("SMTP_FROM").expect("Must include a SMTP_FROM email");
+    let from_urgent = env::var("SMTP_FROM_URGENT").unwrap_or_else(|_| from_standard.clone());
+    let from_immediate = env::var("SMTP_FROM_IMMEDIATE").unwrap_or_else(|_| from_standard.clone());
 
     let mut from_map = HashMap::new();
     from_map.insert("standard".to_string(), from_standard);
@@ -246,7 +247,7 @@ pub async fn email_worker(state: AppState) {
 
                 let notification_result = send_email(
                     &from,
-                    NOTIFICATION_EMAIL,
+                    &NOTIFICATION_EMAIL,
                     &notification_subject,
                     &notification_body,
                 )

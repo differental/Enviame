@@ -1,6 +1,7 @@
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use axum_csrf::CsrfToken;
 use serde::{Deserialize, Serialize};
+use std::env;
 
 use crate::{state::AppState, utils::generate_hash};
 
@@ -49,8 +50,8 @@ pub async fn handle_form_submission(
     }
 
     // If not prod or beta, do not modify database or send email
-    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
-        && std::env::var("DEPLOY_ENV").unwrap_or_default() != "beta"
+    if env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
+        && env::var("DEPLOY_ENV").unwrap_or_default() != "beta"
     {
         return (
             StatusCode::IM_A_TEAPOT,

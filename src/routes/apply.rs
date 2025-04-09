@@ -35,8 +35,8 @@ pub async fn handle_apply(
     }
 
     // If not prod or beta, do not modify database
-    if std::env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
-        && std::env::var("DEPLOY_ENV").unwrap_or_default() != "beta"
+    if env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
+        && env::var("DEPLOY_ENV").unwrap_or_default() != "beta"
     {
         return (
             StatusCode::IM_A_TEAPOT,
@@ -49,7 +49,7 @@ pub async fn handle_apply(
         return (StatusCode::BAD_REQUEST, "reCAPTCHA verification failed").into_response();
     }
 
-    let recaptcha_key = env::var("RECAPTCHA_SECRET_KEY").expect("SECRET_KEY not found");
+    let recaptcha_key = env::var("RECAPTCHA_SECRET_KEY").expect("RECAPTCHA_SECRET_KEY must be set");
 
     let client = Client::new();
     let params = [("secret", recaptcha_key), ("response", payload.recaptcha)];

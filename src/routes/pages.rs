@@ -1,6 +1,7 @@
 use askama::Template;
 use axum::response::{Html, IntoResponse};
 use axum_csrf::CsrfToken;
+use std::env;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -26,7 +27,8 @@ struct ApplyPageTemplate {
 
 pub async fn serve_apply_form(token: CsrfToken) -> impl IntoResponse {
     let csrf_token = token.authenticity_token().unwrap();
-    let recaptcha_site_token = env!("RECAPTCHA_SITE_KEY").to_string();
+    let recaptcha_site_token =
+        env::var("RECAPTCHA_SITE_KEY").expect("RECAPTCHA_SITE_KEY must be set");
 
     let template = ApplyPageTemplate {
         csrf_token,
