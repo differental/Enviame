@@ -37,6 +37,13 @@ body {
     border-radius: 8px;
     margin-bottom: 15px;
 }
+.email-copy {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: gray;
+    background: white;
+    padding: 5px;
+}
 .beta-warning {
     font-size: 0.9rem;
     background: orange;
