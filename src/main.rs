@@ -33,7 +33,6 @@ use state::AppState;
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
     dotenv().ok();
-    tracing_subscriber::fmt::init();
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db_pool = PgPool::connect(&database_url).await?;

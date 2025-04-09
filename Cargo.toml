@@ -1,6 +1,6 @@
 [package]
 name = "enviame"
-version = "1.0.6"
+version = "1.0.7"
 edition = "2024"
 license = "AGPL-3.0-only"
 build = "build.rs"
@@ -17,7 +17,6 @@ tower-http = { version = "0.6", features = ["cors", "fs"] }
 rand = "0.9"
 reqwest = { version = "0.12", features = ["json"] }
 axum_csrf = { version = "0.11", features = ["layer"] }
-tracing-subscriber = "0.3"
 askama = "0.13"
 anyhow = "1.0"
 time = { version = "0.3", features = ["formatting"] }
