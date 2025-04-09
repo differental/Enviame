@@ -12,12 +12,12 @@ enum MessagePriority {
     Immediate,
 }
 
-impl ToString for MessagePriority {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for MessagePriority {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MessagePriority::Standard => "standard".to_string(),
-            MessagePriority::Urgent => "urgent".to_string(),
-            MessagePriority::Immediate => "immediate".to_string(),
+            MessagePriority::Standard => write!(f, "standard"),
+            MessagePriority::Urgent => write!(f, "urgent"),
+            MessagePriority::Immediate => write!(f, "immediate"),
         }
     }
 }

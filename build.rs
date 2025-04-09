@@ -1,5 +1,5 @@
-use std::{fs, path::Path};
 use html_minifier::minify;
+use std::{fs, path::Path};
 
 fn main() {
     let dir = Path::new("static_src");
