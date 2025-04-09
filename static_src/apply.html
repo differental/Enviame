@@ -10,12 +10,12 @@
 {% block content %}
     <h2 class="mb-3">Account Registration</h2>
 
-    <div class="beta-warning" id="beta-warning" style="display:none">
+    <div class="beta-warning" id="betaWarning" style="display:none">
         🚧 You are on a beta or development build 🚧
     </div>
 
     <form id="applyForm">
-        <input type="hidden" id="csrf_token" value="{{ csrf_token }}"/>
+        <input type="hidden" id="csrfToken" value="{{ csrf_token }}"/>
 
         <div class="row g-2">
             <div class="col-md-6">
@@ -42,7 +42,7 @@
         async function submitApplyForm(event) {
             event.preventDefault();
             
-            const csrf_token = document.getElementById("csrf_token").value;
+            const csrfToken = document.getElementById("csrfToken").value;
             const name = document.getElementById("name").value;
             const email = document.getElementById("email").value;
             const recaptchaResponse = grecaptcha.getResponse();
@@ -70,7 +70,7 @@
             const response = await fetch("/api/apply", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ csrf_token, name, email, recaptcha: recaptchaResponse })
+                body: JSON.stringify({ csrf_token: csrfToken, name, email, recaptcha: recaptchaResponse })
             });
             const msg = await response.text();
 

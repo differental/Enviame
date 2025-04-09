@@ -11,16 +11,16 @@
     <h2 class="mb-3">Send a Priority Message</h2>
     <div id="tokenStatus" class="token-status" style="display:none"></div>
 
-    <div class="beta-warning" id="beta-warning" style="display:none">
+    <div class="beta-warning" id="betaWarning" style="display:none">
         🚧 You are on a beta or development build 🚧
     </div>
     
-    <div class="explanation" id="guest-note">
+    <div class="explanation" id="guestNote">
         This tool is intended for use exclusively during focus periods. Please use it only when you are unable to reach me through instant messaging.
     </div>
 
     <form id="submitForm">
-        <input type="hidden" id="csrf_token" value="{{ csrf_token }}"/>
+        <input type="hidden" id="csrfToken" value="{{ csrf_token }}"/>
 
         <div class="row g-2" id="nameFields">
             <div class="col-md-6">
@@ -82,7 +82,7 @@
                 }
                 tokenStatus.style.display = "block";
 
-                document.getElementById("guest-note").style.display = "none";
+                document.getElementById("guestNote").style.display = "none";
                 document.getElementById("nameFields").style.display = "none";
 
                 document.getElementById("emailCopy").innerText = `A copy of this message will be sent to ${data.email}`;
@@ -148,7 +148,7 @@
         async function submitForm(event) {
             event.preventDefault();
 
-            const csrf_token = document.getElementById("csrf_token").value;
+            const csrfToken = document.getElementById("csrfToken").value;
             const name = apiName || document.getElementById("name").value.trim();
             const email = apiEmail || document.getElementById("email").value.trim();
             const message = document.getElementById("message").value.trim();
@@ -177,7 +177,7 @@
                         const response = await fetch("/api/submit", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ csrf_token, name, email, message, token, priority: selectedPriority })
+                            body: JSON.stringify({ csrf_token: csrfToken, name, email, message, token, priority: selectedPriority })
                         });
 
                         if (response.ok) {

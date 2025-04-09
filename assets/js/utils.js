@@ -30,10 +30,10 @@ async function fetchVersion() {
             .then(data => {
                 if (data.deployment == "beta" || data.deployment == "dev") {
                     document.getElementById("version").textContent = `${data.version} (${data.deployment} build)`;
-                    document.getElementById("beta-warning").style.display = "block";
+                    document.getElementById("betaWarning").style.display = "block";
                 } else {
                     document.getElementById("version").textContent = data.version;
-                    document.getElementById("beta-warning").style.display = "none";
+                    document.getElementById("betaWarning").style.display = "none";
                 }
             });
     } catch (error) {
