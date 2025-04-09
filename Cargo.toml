@@ -3,9 +3,7 @@ name = "enviame"
 version = "1.0.6"
 edition = "2024"
 license = "AGPL-3.0-only"
-
-[net]
-git-fetch-with-cli = true
+build = "build.rs"
 
 [dependencies]
 axum = "0.8"
@@ -21,9 +19,11 @@ reqwest = { version = "0.12", features = ["json"] }
 axum_csrf = { version = "0.11", features = ["layer"] }
 tracing-subscriber = "0.3"
 askama = "0.13"
-html-minifier = "5.0"
 anyhow = "1.0"
 time = { version = "0.3", features = ["formatting"] }
 sha2 = "0.10"
 hmac = "0.12"
 hex = "0.4"
+
+[build-dependencies]
+html-minifier = "5.0"

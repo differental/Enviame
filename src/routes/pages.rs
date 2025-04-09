@@ -4,7 +4,6 @@ use axum::{
     response::{Html, IntoResponse},
 };
 use axum_csrf::CsrfToken;
-use html_minifier::minify;
 
 use crate::state::AppState;
 
@@ -19,9 +18,8 @@ pub async fn serve_index(State(_state): State<AppState>, token: CsrfToken) -> im
 
     let template = IndexPageTemplate { csrf_token };
     let rendered = template.render().unwrap();
-    let minified = minify(&rendered).unwrap();
 
-    (token, Html(minified)).into_response()
+    (token, Html(rendered)).into_response()
 }
 
 #[derive(Template)]
@@ -43,9 +41,8 @@ pub async fn serve_apply_form(
         recaptcha_site_token,
     };
     let rendered = template.render().unwrap();
-    let minified = minify(&rendered).unwrap();
 
-    (token, Html(minified)).into_response()
+    (token, Html(rendered)).into_response()
 }
 
 #[derive(Template)]
@@ -55,7 +52,6 @@ struct AboutPageTemplate;
 pub async fn serve_about_page(State(_state): State<AppState>) -> impl IntoResponse {
     let template = AboutPageTemplate;
     let rendered = template.render().unwrap();
-    let minified = minify(&rendered).unwrap();
 
-    Html(minified).into_response()
+    Html(rendered).into_response()
 }
