@@ -9,6 +9,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    environment:
+      name: manual-deploy
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
