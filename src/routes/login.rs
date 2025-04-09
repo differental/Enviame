@@ -41,14 +41,14 @@ pub async fn handle_login(
             Json(LoginResponse {
                 email: Some(user.email),
                 name: Some(user.name),
-                verified: Some(user.verified)
+                verified: Some(user.verified),
             }),
         )
             .into_response(),
         None => Json(LoginResponse {
             email: None,
             name: None,
-            verified: None
+            verified: None,
         })
         .into_response(),
     }
