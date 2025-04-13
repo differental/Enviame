@@ -26,6 +26,5 @@ jobs:
       - name: Deploy via SSH
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            ./update_enviame.sh
+            ./update_enviame_beta.sh
           EOF
-

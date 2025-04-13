@@ -28,4 +28,3 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             ./update_enviame_prod.sh
           EOF
-
