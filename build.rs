@@ -18,5 +18,5 @@ fn main() {
         }
     }
 
-    println!("cargo:rerun-if-changed=templates_src");
+    println!("cargo:rerun-if-changed=static_src");
 }
