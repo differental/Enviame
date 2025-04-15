@@ -2,81 +2,21 @@ name: CI Deploy (Beta)
 
 on:
   push:
-    branches: 
-      - main
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: mydb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DATABASE_URL: postgres://postgres:password@localhost:5432/mydb
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Apply database schema
-        run: psql "$DATABASE_URL" -f schema.sql
-
-      - name: Install SQLx CLI
-        run: cargo install sqlx-cli --no-default-features --features postgres
-
-      - name: Prepare SQLx
-        run: cargo sqlx prepare
-
-      - name: Cache SQLx query data
-        uses: actions/cache@v3
-        with:
-          path: .sqlx
-          key: sqlx-${{ github.sha }}
-
   build:
     runs-on: ubuntu-latest
-    needs: prepare
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      - name: Restore SQLx query cache
-        uses: actions/cache@v3
-        with:
-          path: .sqlx
-          key: sqlx-${{ github.sha }}
+        uses: actions/checkout@v4
 
       - name: Build project
-        run: cargo build --release
+        run: cargo build --release --verbose
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
