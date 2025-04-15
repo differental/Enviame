@@ -16,12 +16,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build project
-        run: cargo build --release --verbose
+        run: cargo build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: enviame
+          name: enviame_beta
           path: target/release/enviame
 
   deploy:
@@ -32,7 +32,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: enviame
+          name: enviame_beta
           path: .
 
       - name: Set up SSH key
