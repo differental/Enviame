@@ -18,6 +18,8 @@
     <div class="explanation" id="guestNote">
         This tool is intended for use exclusively during focus periods. Please use it only when you are unable to reach me through instant messaging.
     </div>
+    
+    <div class="token-status" id="calendarStatus", style="display:none"></div>
 
     <form id="submitForm">
         <input type="hidden" id="csrfToken" value="{{ csrf_token }}"/>
@@ -248,7 +250,74 @@
             }, 5000); // check every 5s
         }
 
+        async function getCalendarStatus() {
+            const response = await fetch('/api/calendar');
+            const data = await response.json();
+
+            const isBusy = data.is_busy;
+            const timestampStr = data.timestamp;
+
+            if (timestampStr === "2099-12-31 23:59") {
+                return { is_busy: isBusy, time_description: null };
+            }
+            const utcDate = new Date(timestampStr + 'Z'); // parse as UTC
+            const now = new Date();
+
+            const diffMs = utcDate - now;
+            const diffMinutes = Math.round(diffMs / (1000 * 60));
+            const diffHours = Math.round(diffMinutes / 60);
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            let timeDescription;
+
+            if (diffMinutes >= -3 && diffMinutes <= 3) {
+                timeDescription = "around now";
+            } else if (diffDays >= 7) {
+                timeDescription = timestampStr; // fallback to original format
+            } else {
+                const localDate = utcDate; // assume already in local time
+                const today = now.toDateString();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(now.getDate() + 1);
+                const isToday = localDate.toDateString() === today;
+                const isTomorrow = localDate.toDateString() === tomorrow.toDateString();
+
+                const hours = localDate.getHours().toString().padStart(2, '0');
+                const minutes = localDate.getMinutes().toString().padStart(2, '0');
+                const timeStr = `${hours}:${minutes}`;
+
+                if (isToday) {
+                    timeDescription = `${timeStr} today`;
+                } else if (isTomorrow) {
+                    timeDescription = `${timeStr} tomorrow`;
+                } else {
+                    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                    const weekday = dayNames[localDate.getDay()];
+                    timeDescription = `${timeStr} ${weekday}`;
+                }
+            }
+
+            return {
+                isBusy,
+                timeDescription
+            };
+        }
+
+        async function showCalendarStatus() {
+            const { isBusy, timeDescription } = await getCalendarStatus();
+
+            const calendarStatus = document.getElementById("calendarStatus");
+            if (isBusy) {
+                calendarStatus.innerHTML = `I am busy until ${timeDescription}<br/>To contact me urgently, send an <font color="#664d03"><b>urgent</b></font> message below`;
+            } else {
+                calendarStatus.innerHTML = `I am available until ${timeDescription}<br/>You should expect a response immediately`;
+            }
+
+            calendarStatus.style.display = "block";
+        }
+
         document.addEventListener("DOMContentLoaded", checkLogin);
+        document.addEventListener("DOMContentLoaded", showCalendarStatus);
         document.getElementById("submitForm").addEventListener("submit", submitForm);
     </script>
 {% endblock %}
