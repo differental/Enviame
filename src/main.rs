@@ -7,7 +7,6 @@ use dotenvy::dotenv;
 use sqlx::PgPool;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use tower_http::cors::{Any, CorsLayer};
 
 mod routes;
 use routes::{
@@ -59,7 +58,6 @@ async fn main() -> Result<(), sqlx::Error> {
         .route("/api/version", get(handle_version))
         .route("/api/message", get(handle_message_query))
         .route("/assets/{*file}", get(serve_embedded_assets))
-        .layer(CorsLayer::new().allow_origin(Any))
         .layer(CsrfLayer::new(csrf_config))
         .with_state(state);
 
