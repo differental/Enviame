@@ -5,16 +5,14 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
-use time::{UtcDateTime, format_description};
 use tokio::task;
 use tokio::time::sleep;
 
+use crate::constants::EMAIL_DATETIME_FORMAT;
 use crate::{state::AppState, utils::capitalize_first};
 
 static NOTIFICATION_EMAIL: Lazy<String> =
     Lazy::new(|| env::var("NOTIFICATION_EMAIL").expect("NOTIFICATION_EMAIL must be set"));
-
-static TIME_FORMAT: &str = "[year]-[month]-[day] [hour]:[minute]:[second]";
 
 static USER_EMAIL_TEMPLATE: &str = r#"<!DOCTYPE html>
 <html>
@@ -182,8 +180,6 @@ pub async fn email_worker(state: AppState) {
     from_map.insert("urgent".to_string(), from_urgent);
     from_map.insert("immediate".to_string(), from_immediate);
 
-    let time_format = format_description::parse(TIME_FORMAT).unwrap();
-
     let cargo_version = env!("CARGO_PKG_VERSION").to_string();
 
     loop {
@@ -208,8 +204,8 @@ pub async fn email_worker(state: AppState) {
                 .expect("Priority must be one of the three options");
             let priority_capitalised = capitalize_first(msg.priority);
             let sender_type_capitalised = capitalize_first(msg.sender);
-            let utc_now = UtcDateTime::now().format(&time_format).unwrap();
-            let submitted_time = msg.submitted_time.to_utc().format(&time_format).unwrap();
+            let utc_now = chrono::Utc::now().format(EMAIL_DATETIME_FORMAT).to_string();
+            let submitted_time = msg.submitted_time.format(EMAIL_DATETIME_FORMAT).to_string();
 
             // Email contents
             let notification_subject = format!(

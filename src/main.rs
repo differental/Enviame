@@ -23,6 +23,8 @@ use routes::{
 mod workers;
 use workers::{calendar::calendar_worker, email::email_worker};
 
+mod constants;
+
 mod utils;
 
 mod state;

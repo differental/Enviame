@@ -4,6 +4,7 @@ use std::env;
 use std::time::Duration;
 use tokio::time::interval;
 
+use crate::constants::CALENDAR_DATETIME_FORMAT;
 use crate::state::{AppState, CalendarCache};
 
 static ZERO_TIME: NaiveTime = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
@@ -81,7 +82,7 @@ pub async fn calendar_worker(state: AppState) {
             Ok(busy_status) => {
                 let new_cache = CalendarCache {
                     is_busy: busy_status.0,
-                    timestamp: busy_status.1.format("%Y-%m-%d %H:%M").to_string(),
+                    timestamp: busy_status.1.format(CALENDAR_DATETIME_FORMAT).to_string(),
                 };
 
                 {
