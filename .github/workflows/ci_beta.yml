@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: deploy
+      name: beta
 
     steps:
       - name: Download artifact
