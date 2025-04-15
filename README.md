@@ -1,5 +1,3 @@
-
-
 <div align="center">
   <h1>Enviame</h1>
   <h3>Priority Messenger</h3>
@@ -52,16 +50,19 @@ Features that integrate Enviame with smartwatches and other delivery options are
 
 ## Tech Stack
 
-- Backend: Rust (w/ Axum), PostgreSQL
-- Frontend: Static HTML (w/ Bootstrap UI)
+- **Backend**
+  - Rust
+  - Axum (framework)
+  - Tokio (async runtime)
+
+- **Database**
+  - PostgreSQL
+
+- **Frontend**
+  - Static HTML
+  - "Vanilla" JavaScript
 
 ## Database Schema
-
-To create the tables:
-
-```bash
-psql "$DATABASE_URL" -f schema.sql
-```
 
 `messages`:
 

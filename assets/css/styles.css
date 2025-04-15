@@ -1,87 +1,195 @@
+/* ==== Light Theme ==== */
+:root {
+    --bg-gradient-start: #f8f9fa;
+    --bg-gradient-end: #e9ecef;
+    --container-bg: #ffffff;
+    --text-color: #000000;
+    --border-color: gray;
+    --beta-warning-bg: orange;
+    --beta-warning-text: white;
+
+    --priority-standard-bg: #cfe2ff;
+    --priority-standard-text: #084298;
+
+    --priority-urgent-bg: #fff3cd;
+    --priority-urgent-text: #664d03;
+
+    --priority-immediate-bg: #f8d7da;
+    --priority-immediate-text: #842029;
+
+    --explanation-bg: #f8f9fa;
+    --email-copy-color: gray;
+    --footer-color: #6c757d;
+
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border: #ccc;
+    --input-placeholder-color: #888;
+
+    --link-color: #4169e1;
+}
+
+/* ==== Dark Theme ==== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-gradient-start: #1e1e1e;
+        --bg-gradient-end: #2c2c2c;
+        --container-bg: #2f2f2f;
+        --text-color: #f1f1f1;
+        --border-color: #888;
+        --beta-warning-bg: #ff9800;
+        --beta-warning-text: #000;
+
+        --priority-standard-bg: #1e3a5f;
+        --priority-standard-text: #cfe2ff;
+
+        --priority-urgent-bg: #665c1e;
+        --priority-urgent-text: #fff3cd;
+
+        --priority-immediate-bg: #5c1e1e;
+        --priority-immediate-text: #f8d7da;
+
+        --explanation-bg: #3a3a3a;
+        --email-copy-color: #bbb;
+        --footer-color: #aaa;
+
+        --input-bg: #333333;
+        --input-text-color: #f1f1f1;
+        --input-border: #666;
+        --input-placeholder-color: #bbb;
+
+        --link-color: #ff8c00;
+    }
+}
+
 body {
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
     background-attachment: fixed;
     overflow-y: auto;
     padding: 20px;
+    color: var(--text-color);
 }
+
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+input, textarea {
+    background-color: var(--input-bg)!important;
+    color: var(--input-text-color)!important;
+    border: 1px solid var(--input-border)!important;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--input-placeholder-color)!important;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #007bff!important;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5)!important;
+}
+
 .container {
     max-width: 600px;
     padding: 30px;
-    background: white;
+    background: var(--container-bg);
     border-radius: 12px;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
     min-height: fit-content;
 }
+
 .priority-btn {
     border: 2px solid;
 }
+
 .priority-btn.selected {
     color: white !important;
 }
+
 .explanation {
     font-size: 0.9rem;
-    background: #f8f9fa;
+    background: var(--explanation-bg);
     padding: 10px;
     border-radius: 8px;
     margin-bottom: 15px;
 }
+
 .token-status {
     font-size: 0.9rem;
-    background: white;
+    background: var(--container-bg);
     padding: 10px;
-    border: 2px dotted gray;
+    border: 2px dotted var(--border-color);
     border-radius: 8px;
     margin-bottom: 15px;
 }
+
 .email-copy {
     font-size: 0.8rem;
     font-style: italic;
-    color: gray;
-    background: white;
+    color: var(--email-copy-color);
+    background: var(--container-bg);
     padding: 5px;
 }
+
 .beta-warning {
     font-size: 0.9rem;
-    background: orange;
-    color: white;
+    background: var(--beta-warning-bg);
+    color: var(--beta-warning-text);
     padding: 10px;
     text-align: center;
     border-radius: 8px;
     margin-bottom: 15px;
 }
+
+.form-control {
+    margin-bottom: 15px;
+}
+
 .priority-explanation {
     font-size: 0.85rem;
-    color: #6c757d;
     display: none;
     padding: 10px;
     border-radius: 8px;
     margin-top: 10px;
 }
+
 .priority-explanation.standard {
-    background-color: #cfe2ff;
-    color: #084298;
+    background-color: var(--priority-standard-bg);
+    color: var(--priority-standard-text);
 }
+
 .priority-explanation.urgent {
-    background-color: #fff3cd;
-    color: #664d03;
+    background-color: var(--priority-urgent-bg);
+    color: var(--priority-urgent-text);
 }
+
 .priority-explanation.immediate {
-    background-color: #f8d7da;
-    color: #842029;
+    background-color: var(--priority-immediate-bg);
+    color: var(--priority-immediate-text);
 }
+
 .g-recaptcha {
     display: inline-block;
 }
+
 .g-recaptcha-wrapper {
     text-align: center;
     margin-top: 20px;
 }
+
 .footer {
     font-size: 0.85rem;
-    color: #6c757d;
-    margin-top: 15px;
+    color: var(--footer-color);
+    margin-top: 10px!important;
 }
