@@ -254,14 +254,14 @@ pub async fn email_worker(state: AppState) {
                 .await;
 
                 if let Err(ref err) = notification_result {
-                    eprintln!("{:?}", err);
+                    eprintln!("Email worker failed to send notification: {:?}", err);
                     is_ok = false;
                 }
 
                 let user_result = send_email(&from, &msg.email, &user_subject, &user_body).await;
 
                 if let Err(ref err) = user_result {
-                    eprintln!("{:?}", err);
+                    eprintln!("Email worker failed to send message receipt: {:?}", err);
                     is_ok = false;
                 }
 

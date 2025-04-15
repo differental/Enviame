@@ -76,26 +76,31 @@ pub async fn calendar_worker(state: AppState) {
 
     loop {
         interval.tick().await;
-        if let Ok(busy_status) = get_busy_status(&calendar_url).await {
-            let new_cache = CalendarCache {
-                is_busy: busy_status.0,
-                timestamp: busy_status.1.format("%Y-%m-%d %H:%M").to_string(),
-            };
 
-            {
-                let old_cache = state.status.read().await;
-                if *old_cache == new_cache {
-                    continue;
+        match get_busy_status(&calendar_url).await {
+            Ok(busy_status) => {
+                let new_cache = CalendarCache {
+                    is_busy: busy_status.0,
+                    timestamp: busy_status.1.format("%Y-%m-%d %H:%M").to_string(),
+                };
+
+                {
+                    let old_cache = state.status.read().await;
+                    if *old_cache == new_cache {
+                        continue;
+                    }
+                }
+                {
+                    let mut old_cache = state.status.write().await;
+                    *old_cache = new_cache;
                 }
             }
-            {
-                let mut old_cache = state.status.write().await;
-                *old_cache = new_cache;
-            }
-        } else {
-            consecutive_fail_count += 1;
-            if consecutive_fail_count >= MAX_CONSECUTIVE_FAILS {
-                return;
+            Err(ref err) => {
+                consecutive_fail_count += 1;
+                eprintln!("Calendar worker failed to update busy status: {:?}", err);
+                if consecutive_fail_count >= MAX_CONSECUTIVE_FAILS {
+                    return;
+                }
             }
         }
     }
