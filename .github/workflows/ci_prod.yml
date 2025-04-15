@@ -22,11 +22,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: enviame
-          path: target/release/enviame
+          path: target/release-prod/enviame
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    environment:
+      name: deploy
 
     steps:
       - name: Download artifact
@@ -44,10 +46,13 @@ jobs:
 
       - name: Upload binary
         run: |
-          scp enviame ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/enviame_prod/enviame
+          scp enviame ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/enviame_prod/enviame.new
 
       - name: Restart services
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            sudo systemctl restart enviame_prod
+            chmod +x ~/enviame_prod/enviame.new
+            sudo systemctl stop enviame_prod
+            mv ~/enviame_prod/enviame.new ~/enviame_prod/enviame
+            sudo systemctl start enviame_prod
           EOF
