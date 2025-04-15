@@ -6,14 +6,14 @@
   <p>Demo: <a href="https://msg-beta.brianc.tech">https://msg-beta.brianc.tech</a></p>
   <p>
     <picture>
-      <a href="https://github.com/differental/enviame/actions/workflows/deploy_prod.yml">
-        <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_prod.yml?label=Production&style=for-the-badge" />
+      <a href="https://github.com/differental/enviame/actions/workflows/ci_prod.yml">
+        <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/ci_prod.yml?label=Production&style=for-the-badge" />
       </a>
     </picture>
     <span>&nbsp;&nbsp;&nbsp;</span>
     <picture>
-      <a href="https://github.com/differental/enviame/actions/workflows/deploy_main.yml">
-        <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/deploy_main.yml?label=Beta&style=for-the-badge">
+      <a href="https://github.com/differental/enviame/actions/workflows/ci_beta.yml">
+        <img src="https://img.shields.io/github/actions/workflow/status/differental/enviame/ci_beta.yml?label=Beta&style=for-the-badge">
       </a>
     </picture>
   </p>
@@ -56,6 +56,12 @@ Features that integrate Enviame with smartwatches and other delivery options are
 - Frontend: Static HTML (w/ Bootstrap UI)
 
 ## Database Schema
+
+To create the tables:
+
+```bash
+psql "$DATABASE_URL" -f schema.sql
+```
 
 `messages`:
 

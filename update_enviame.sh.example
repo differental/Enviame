@@ -1,16 +1,13 @@
 #!/bin/bash
 
-# This is an example of the deployment script referenced in the deployment workflow.
-# The script pulls the latest commit from a branch, builds the server binary and restarts
-#   the relevant systemd service.
+# This is an example of the deployment script referenced in the old deployment workflow.
+# The script runs on the target server, pulls the latest commit from a branch, builds the 
+#   server binary and restarts the relevant systemd service.
 
 # This is designed to be a simple script, and thus you will need to manually install rustup,
 #   configure the git repository and configure the systemd service before using this.
 
-# Note: It is possible to build the binary with github actions, but you will need to have 
-#   valid database credentials inside .env to pass compilation, since sqlx::query! cannot 
-#   verify the returned type without credentials for a valid database.
-# For database schema, see README
+# This has been replaced by the current CI workflow.
 
 
 . "$HOME/.cargo/env"
