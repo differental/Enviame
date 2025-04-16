@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveTime, TimeZone, Utc};
+use chrono::{DateTime, NaiveTime, TimeZone, Timelike, Utc};
 use icalendar::{Calendar, CalendarComponent, Component, DatePerhapsTime, EventStatus};
 use std::env;
 use std::time::Duration;
@@ -56,6 +56,50 @@ async fn get_busy_status(url: &str) -> anyhow::Result<(bool, DateTime<Utc>)> {
                     }
                 }
             }
+        }
+    }
+
+    // Nighttime configuration - configured at 22.00-07.00 **UTC**
+    const START_HOUR: u32 = 22;
+    const END_HOUR: u32 = 7;
+
+    let now = chrono::Utc::now();
+    let hour = now.hour();
+    if hour >= START_HOUR || hour < END_HOUR {
+        is_busy = true;
+        let next_morning = if hour < END_HOUR {
+            now.date_naive()
+                .and_hms_opt(END_HOUR, 0, 0)
+                .unwrap()
+                .and_utc()
+        } else {
+            (now + chrono::Duration::days(1))
+                .date_naive()
+                .and_hms_opt(END_HOUR, 0, 0)
+                .unwrap()
+                .and_utc()
+        };
+        if next_morning > last_dt_end {
+            last_dt_end = next_morning;
+        }
+    }
+    if !is_busy {
+        let this_night = now
+            .date_naive()
+            .and_hms_opt(START_HOUR, 0, 0)
+            .unwrap()
+            .and_utc();
+        let next_night_start = if now < this_night {
+            this_night
+        } else {
+            (now + chrono::Duration::days(1))
+                .date_naive()
+                .and_hms_opt(START_HOUR, 0, 0)
+                .unwrap()
+                .and_utc()
+        };
+        if next_night_start < first_dt_start {
+            first_dt_start = next_night_start;
         }
     }
 
