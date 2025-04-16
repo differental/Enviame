@@ -251,14 +251,16 @@
         }
 
         async function getCalendarStatus() {
+            // datetime must be converted to human-readable format at client-side, 
+            //   since we need to follow the user's timezone
             const response = await fetch('/api/calendar');
             const data = await response.json();
 
-            const isBusy = data.is_busy;
+            let isBusy = data.is_busy;
             const timestampStr = data.timestamp;
 
             if (timestampStr === "2099-12-31 23:59") {
-                return { is_busy: isBusy, time_description: null };
+                return { isBusy, timeDescription: "at the moment" };
             }
             const utcDate = new Date(timestampStr + 'Z'); // parse as UTC
             const now = new Date();
@@ -270,10 +272,15 @@
 
             let timeDescription;
 
-            if (diffMinutes >= -3 && diffMinutes <= 3) {
-                timeDescription = "around now";
-            } else if (diffDays >= 7) {
-                timeDescription = timestampStr; // fallback to original format
+            if (diffMinutes >= 0 && diffMinutes <= 5) {
+                timeDescription = "for the next few minutes";
+            } else if (diffMinutes >= -3 && diffMinutes < 0) { // late update
+                isBusy = !isBusy;
+                timeDescription = "right now";
+            } else if (diffMinutes < 0) { // should not happen since updates happen every 2 mins
+                timeDescription = "at the moment";
+            } else if (diffDays >= 7) { // fallback to original format
+                timeDescription = `until ${timestampStr}`;
             } else {
                 const localDate = utcDate; // assume already in local time
                 const today = now.toDateString();
@@ -287,13 +294,13 @@
                 const timeStr = `${hours}:${minutes}`;
 
                 if (isToday) {
-                    timeDescription = `${timeStr} today`;
+                    timeDescription = `until ${timeStr} today`;
                 } else if (isTomorrow) {
-                    timeDescription = `${timeStr} tomorrow`;
+                    timeDescription = `until ${timeStr} tomorrow`;
                 } else {
                     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
                     const weekday = dayNames[localDate.getDay()];
-                    timeDescription = `${timeStr} ${weekday}`;
+                    timeDescription = `until ${timeStr} ${weekday}`;
                 }
             }
 
@@ -308,9 +315,9 @@
 
             const calendarStatus = document.getElementById("calendarStatus");
             if (isBusy) {
-                calendarStatus.innerHTML = `I am busy until ${timeDescription}<br/>To reach me, send an <font color="orange"><b>Urgent</b></font> message below`;
+                calendarStatus.innerHTML = `I am busy ${timeDescription}<br/>To reach me, send an <font color="orange"><b>Urgent</b></font> message below`;
             } else {
-                calendarStatus.innerHTML = `I am available until ${timeDescription}<br/>You should expect a response immediately`;
+                calendarStatus.innerHTML = `I am available ${timeDescription}<br/>You should expect a response immediately`;
             }
 
             calendarStatus.style.display = "block";
