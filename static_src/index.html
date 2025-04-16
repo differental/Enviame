@@ -15,9 +15,11 @@
         🚧 You are on a beta or development build 🚧
     </div>
     
+    <!--
     <div class="explanation" id="guestNote">
         This tool is intended for use exclusively during focus periods. Please use it only when you are unable to reach me through instant messaging.
     </div>
+    -->
     
     <div class="token-status" id="calendarStatus", style="display:none"></div>
 
@@ -84,7 +86,7 @@
                 }
                 tokenStatus.style.display = "block";
 
-                document.getElementById("guestNote").style.display = "none";
+                //document.getElementById("guestNote").style.display = "none";
                 document.getElementById("nameFields").style.display = "none";
 
                 document.getElementById("emailCopy").innerText = `A copy of this message will be sent to ${data.email}`;
