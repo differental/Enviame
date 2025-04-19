@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}Message Notification{% endblock %}</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                padding: 20px;
+            }
+            .container {
+                max-width: 500px;
+                background: #ffffff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+                margin: auto;
+            }
+            .header {
+                font-size: 14px;
+                color: #333;
+            }
+            .message {
+                font-size: 16px;
+                color: #555;
+                padding: 10px;
+                background: #f9f9f9;
+                border-left: 4px solid #007BFF;
+                margin-top: 10px;
+            }
+            .details {
+                font-size: 14px;
+                color: #444;
+                margin-top: 15px;
+                padding: 10px;
+                background: #f4f4f4;
+                border-radius: 5px;
+            }
+            .footer {
+                font-size: 12px;
+                color: #777;
+                margin-top: 20px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            {% block content %}{% endblock %}
+
+            <div class="footer">
+                Delivered by Enviame {{+ version }}
+            </div>
+        </div>
+    </body>
+</html>

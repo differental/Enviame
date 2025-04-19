@@ -33,10 +33,17 @@ struct UserEmailTemplate<'a> {
     version: &'a str,
 }
 
-async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::Result<()> {
+async fn send_email(
+    from: &str,
+    to: &str,
+    reply_to: &str,
+    subject: &str,
+    body: &str,
+) -> anyhow::Result<()> {
     let email = Message::builder()
         .from(from.parse()?)
         .to(to.parse()?)
+        .reply_to(reply_to.parse()?)
         .subject(subject)
         .header(ContentType::TEXT_HTML)
         .body(body.to_string())?;
@@ -46,6 +53,8 @@ async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::
 }
 
 pub async fn email_worker(state: AppState) {
+    // SMTP_FROM(s) are emails where all the emails are sent from
+    // This can be different from SMTP_USERNAME
     let from_standard = env::var("SMTP_FROM").expect("Must include a SMTP_FROM email");
     let from_urgent = env::var("SMTP_FROM_URGENT").unwrap_or_else(|_| from_standard.clone());
     let from_immediate = env::var("SMTP_FROM_IMMEDIATE").unwrap_or_else(|_| from_standard.clone());
@@ -125,6 +134,7 @@ pub async fn email_worker(state: AppState) {
                 let notification_result = send_email(
                     &from,
                     &NOTIFICATION_EMAIL,
+                    &msg.email,
                     &notification_subject,
                     &notification_body,
                 )
@@ -135,7 +145,14 @@ pub async fn email_worker(state: AppState) {
                     is_ok = false;
                 }
 
-                let user_result = send_email(&from, &msg.email, &user_subject, &user_body).await;
+                let user_result = send_email(
+                    &from,
+                    &msg.email,
+                    &NOTIFICATION_EMAIL,
+                    &user_subject,
+                    &user_body,
+                )
+                .await;
 
                 if let Err(ref err) = user_result {
                     eprintln!("Email worker failed to send message receipt: {:?}", err);

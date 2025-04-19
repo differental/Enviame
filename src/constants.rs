@@ -7,7 +7,7 @@ use std::env;
 
 // --- Formats ---
 // Datetime format, used when sending emails
-pub static EMAIL_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M";
+pub static EMAIL_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
 // Datetime format, used in calendar API. Frontend js must be updated if this is changed
 pub static CALENDAR_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M";
@@ -52,7 +52,7 @@ pub static RECAPTCHA_SECRET_KEY: Lazy<String> =
     Lazy::new(|| env::var("RECAPTCHA_SECRET_KEY").expect("RECAPTCHA_SECRET_KEY must be set"));
 
 // --- SMTP Email Configurations ---
-// Notification email, used when sending emails
+// Recipient address of all notification emails, and reply_to address of all user emails
 pub static NOTIFICATION_EMAIL: Lazy<String> =
     Lazy::new(|| env::var("NOTIFICATION_EMAIL").expect("NOTIFICATION_EMAIL must be set"));
 

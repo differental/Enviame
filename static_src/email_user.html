@@ -1,56 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Message Delivered Successfully</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f4;
-                padding: 20px;
-            }
-            .container {
-                max-width: 500px;
-                background: #ffffff;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-                margin: auto;
-            }
-            .header {
-                font-size: 18px;
-                font-weight: bold;
-                color: #333;
-            }
-            .message {
-                font-size: 16px;
-                color: #555;
-                padding: 10px;
-                background: #f9f9f9;
-                border-left: 4px solid #007BFF;
-                margin-top: 10px;
-            }
-            .footer {
-                font-size: 12px;
-                color: #777;
-                margin-top: 20px;
-                text-align: center;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">Your message has been delivered successfully. A copy has been attached below.</div>
-            
-            <div class="message">
-                <p><strong>From:</strong> {{+ name +}} ({{ email }})</p>
-                <p><strong>Message:</strong></p>
-                <p>{{ message }}</p>
-            </div>
+{% extends "email_base.html" %}
 
-            <div class="footer">
-                Delivered by Enviame {{+ version }}
-            </div>
-        </div>
-    </body>
-</html>
+{% block title %}Message Delivered Successfully{% endblock %}
+
+{% block content %}
+    <div class="header">Your message has been delivered successfully. A copy has been attached below.</div>
+
+    <div class="message">
+        <p><strong>From:</strong> {{+ name +}} ({{ email }})</p>
+        <p><strong>Message:</strong></p>
+        <p>{{ message }}</p>
+    </div>
+{% endblock %}
