@@ -65,6 +65,8 @@ async fn get_busy_status(url: &str) -> anyhow::Result<(bool, DateTime<Utc>)> {
 
     let now = chrono::Utc::now();
     let hour = now.hour();
+
+    #[allow(clippy::manual_range_contains)]
     if hour >= START_HOUR || hour < END_HOUR {
         is_busy = true;
         let next_morning = if hour < END_HOUR {
