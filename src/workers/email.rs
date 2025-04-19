@@ -1,3 +1,4 @@
+use askama::Template;
 use lettre::message::header::ContentType;
 use lettre::{Message, Transport};
 use std::collections::HashMap;
@@ -6,12 +7,31 @@ use std::time::Duration;
 use tokio::task;
 use tokio::time::sleep;
 
-use crate::constants::{
-    CARGO_PKG_VERSION, EMAIL_DATETIME_FORMAT, MAILER, NOTIFICATION_EMAIL,
-    NOTIFICATION_EMAIL_TEMPLATE, USER_EMAIL_TEMPLATE,
-};
+use crate::constants::{CARGO_PKG_VERSION, EMAIL_DATETIME_FORMAT, MAILER, NOTIFICATION_EMAIL};
 use crate::state::AppState;
 use crate::utils::capitalize_first;
+
+#[derive(Template)]
+#[template(path = "email_notification.html")]
+struct NotificationEmailTemplate<'a> {
+    message: &'a str,
+    priority: &'a str,
+    name: &'a str,
+    email: &'a str,
+    status: &'a str,
+    submitted_time: &'a str,
+    delivered_time: &'a str,
+    version: &'a str,
+}
+
+#[derive(Template)]
+#[template(path = "email_user.html")]
+struct UserEmailTemplate<'a> {
+    message: &'a str,
+    name: &'a str,
+    email: &'a str,
+    version: &'a str,
+}
 
 async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::Result<()> {
     let email = Message::builder()
@@ -22,7 +42,6 @@ async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::
         .body(body.to_string())?;
 
     MAILER.send(&email)?;
-
     Ok(())
 }
 
@@ -62,26 +81,34 @@ pub async fn email_worker(state: AppState) {
             let submitted_time = msg.submitted_time.format(EMAIL_DATETIME_FORMAT).to_string();
 
             // Email contents
+            let message_content = msg.message.replace("\n", "<br>");
+
             let notification_subject = format!(
                 "[Enviame] {} Message from {}({})",
                 priority_capitalised, msg.name, sender_type_capitalised
             );
-            let notification_body = NOTIFICATION_EMAIL_TEMPLATE
-                .replace("{{message}}", &msg.message.replace("\n", "<br>"))
-                .replace("{{priority}}", &priority_capitalised)
-                .replace("{{name}}", &msg.name)
-                .replace("{{email}}", &msg.email)
-                .replace("{{status}}", &sender_type_capitalised)
-                .replace("{{submitted_time}}", &submitted_time)
-                .replace("{{delivered_time}}", &utc_now)
-                .replace("{{version}}", CARGO_PKG_VERSION);
+            let notification_template = NotificationEmailTemplate {
+                message: &message_content,
+                priority: &priority_capitalised,
+                name: &msg.name,
+                email: &msg.email,
+                status: &sender_type_capitalised,
+                submitted_time: &submitted_time,
+                delivered_time: &utc_now,
+                version: CARGO_PKG_VERSION,
+            };
+            let notification_body = notification_template
+                .render()
+                .expect("Notification email failed to render");
 
             let user_subject = format!("[Enviame] {} Message Delivered", priority_capitalised);
-            let user_body = USER_EMAIL_TEMPLATE
-                .replace("{{name}}", &msg.name)
-                .replace("{{email}}", &msg.email)
-                .replace("{{message}}", &msg.message.replace("\n", "<br>"))
-                .replace("{{version}}", CARGO_PKG_VERSION);
+            let user_template = UserEmailTemplate {
+                name: &msg.name,
+                email: &msg.email,
+                message: &message_content,
+                version: CARGO_PKG_VERSION,
+            };
+            let user_body = user_template.render().expect("User email failed to render");
 
             // Send email in new thread
             task::spawn(async move {

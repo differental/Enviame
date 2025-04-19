@@ -52,6 +52,10 @@ pub static RECAPTCHA_SECRET_KEY: Lazy<String> =
     Lazy::new(|| env::var("RECAPTCHA_SECRET_KEY").expect("RECAPTCHA_SECRET_KEY must be set"));
 
 // --- SMTP Email Configurations ---
+// Notification email, used when sending emails
+pub static NOTIFICATION_EMAIL: Lazy<String> =
+    Lazy::new(|| env::var("NOTIFICATION_EMAIL").expect("NOTIFICATION_EMAIL must be set"));
+
 // SMTP Server
 pub static SMTP_SERVER: Lazy<String> =
     Lazy::new(|| env::var("SMTP_SERVER").expect("SMTP_SERVER must be set"));
@@ -80,136 +84,3 @@ pub static MAILER: Lazy<SmtpTransport> = Lazy::new(|| {
         .authentication(vec![Mechanism::Plain])
         .build()
 });
-
-// --- Email Configurations ---
-// Notification email, used when sending emails
-pub static NOTIFICATION_EMAIL: Lazy<String> =
-    Lazy::new(|| env::var("NOTIFICATION_EMAIL").expect("NOTIFICATION_EMAIL must be set"));
-
-// Email templates
-pub static USER_EMAIL_TEMPLATE: &str = r#"<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Message Delivered Successfully</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }}
-        .container {{
-            max-width: 500px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin: auto;
-        }}
-        .header {{
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }}
-        .message {{
-            font-size: 16px;
-            color: #555;
-            padding: 10px;
-            background: #f9f9f9;
-            border-left: 4px solid #007BFF;
-            margin-top: 10px;
-        }}
-        .footer {{
-            font-size: 12px;
-            color: #777;
-            margin-top: 20px;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="header">Your message has been delivered successfully. A copy has been attached below.</div>
-    
-    <div class="message">
-        <p><strong>From:</strong> {{name}} ({{email}})</p>
-        <p><strong>Message:</strong></p>
-        <p>{{message}}</p>
-    </div>
-
-    <div class="footer">
-        Delivered by Enviame {{version}}
-    </div>
-</div>
-
-</body>
-</html>"#;
-
-pub static NOTIFICATION_EMAIL_TEMPLATE: &str = r#"<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Message Notification</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }}
-        .container {{
-            max-width: 500px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin: auto;
-        }}
-        .message {{
-            font-size: 16px;
-            color: #555;
-            padding: 10px;
-            background: #f9f9f9;
-            border-left: 4px solid #007BFF;
-            margin-top: 10px;
-        }}
-        .details {{
-            font-size: 14px;
-            color: #444;
-            margin-top: 15px;
-            padding: 10px;
-            background: #f4f4f4;
-            border-radius: 5px;
-        }}
-        .footer {{
-            font-size: 12px;
-            color: #777;
-            margin-top: 20px;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="message">
-        <p><strong>Message:</strong></p>
-        <p>{{message}}</p>
-    </div>
-
-    <div class="details">
-        <p><strong>Priority:</strong> {{priority}}</p>
-        <p><strong>Name:</strong> {{name}}</p>
-        <p><strong>Email:</strong> {{email}}</p>
-        <p><strong>Status:</strong> {{status}}</p>
-        <p><strong>Submitted at:</strong> {{submitted_time}}</p>
-        <p><strong>Delivered at:</strong> {{delivered_time}}</p>
-    </div>
-
-    <div class="footer">
-        Message delivered by Enviame {{version}}
-    </div>
-</div>
-
-</body>
-</html>"#;
