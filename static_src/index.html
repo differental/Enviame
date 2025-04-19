@@ -15,12 +15,6 @@
         🚧 You are on a beta or development build 🚧
     </div>
     
-    <!--
-    <div class="explanation" id="guestNote">
-        This tool is intended for use exclusively during focus periods. Please use it only when you are unable to reach me through instant messaging.
-    </div>
-    -->
-    
     <div class="token-status" id="calendarStatus", style="display:none"></div>
 
     <form id="submitForm">
@@ -28,16 +22,13 @@
 
         <div class="row g-2" id="nameFields">
             <div class="col-md-6">
-                <!--<label for="name" class="form-label">Name</label>-->
                 <input type="text" id="name" class="form-control" placeholder="Name" required>
             </div>
             <div class="col-md-6">
-                <!--<label for="email" class="form-label">Email</label>-->
                 <input type="email" id="email" class="form-control" placeholder="Email" required>
             </div>
         </div>
 
-        <!--<label for="message" class="form-label mt-3">Message</label>-->
         <textarea id="message" class="form-control" rows="4" placeholder="Message" required></textarea>
 
         <div class="d-flex justify-content-between mt-3">
@@ -61,10 +52,10 @@
 {% block js %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        var apiEmail = null, apiName = null;
+        let apiEmail = null, apiName = null;
 
         async function checkLogin() {
-            const token = getToken();
+            const { token, source } = getToken();
             if (!token) return;
 
             const response = await fetch(`/api/login?token=${token}`);
@@ -74,47 +65,44 @@
                 apiEmail = data.email;
                 apiName = data.name;
 
-                document.getElementById("name").value = data.name;
-                document.getElementById("email").value = data.email;
-                document.getElementById("name").disabled = true;
-                document.getElementById("email").disabled = true;
+                const nameElement = document.getElementById("name");
+                const emailElement = document.getElementById("email");
+                nameElement.value = data.name;
+                emailElement.value = data.email;
+                nameElement.disabled = true;
+                emailElement.disabled = true;
 
                 const tokenStatus = document.getElementById("tokenStatus");
-                tokenStatus.innerHTML = `Logged in as ${data.name} <img id="verifiedIcon" src="/assets/img/tick_blue.svg" width="26" height="26" style="display: inline;">`;
-                if (data.verified) {
-                    document.getElementById("verifiedIcon").src = "/assets/img/tick_gold.svg";
-                }
+                tokenStatus.innerHTML = `Logged in as ${data.name} <img id="verifiedIcon" src="/assets/img/${data.verified ? "tick_gold.svg" : "tick_blue.svg"}" width="26" height="26" style="display: inline;">`;
                 tokenStatus.style.display = "block";
 
-                //document.getElementById("guestNote").style.display = "none";
                 document.getElementById("nameFields").style.display = "none";
 
-                document.getElementById("emailCopy").innerText = `A copy of this message will be sent to ${data.email}`;
-                document.getElementById("emailCopy").style.display = "block";
+                const emailCopy = document.getElementById("emailCopy");
+                emailCopy.innerText = `A copy of this message will be sent to ${data.email}`;
+                emailCopy.style.display = "block";
 
-                if (new URLSearchParams(window.location.search).get("token")) {
+                if (source === "params") {
                     setToken(token);
                 }
-            } else {
-                if (new URLSearchParams(window.location.search).get("token")) {
-                    document.getElementById("tokenStatus").innerText = `Token Invalid: ${token}`;
-                }
+            } else if (source === "params") {
+                document.getElementById("tokenStatus").innerText = `Token Invalid: ${token}`;
             }
         }
 
         let selectedPriority = "urgent";
         const priorityClassMap = {
-            "standard": "primary",
-            "urgent": "warning",
-            "immediate": "danger"
+            standard: "primary",
+            urgent: "warning",
+            immediate: "danger"
         };
 
         document.querySelectorAll(".priority-btn").forEach(button => {
             button.addEventListener("click", () => {
                 document.querySelectorAll(".priority-btn").forEach(btn => {
-                    btn.classList.remove("selected", "btn-primary", "btn-warning", "btn-danger");
-                    const priority = btn.dataset.value;
-                    btn.classList.add(`btn-outline-${priorityClassMap[priority]}`);
+                    const p = btn.dataset.value;
+                    btn.classList.remove("selected", `btn-${priorityClassMap[p]}`);
+                    btn.classList.add(`btn-outline-${priorityClassMap[p]}`);
                 });
 
                 const priority = button.dataset.value;
@@ -138,15 +126,10 @@
             hideMethod: "hide"
         };
         const toastr_config_success_or_fail = {
-            positionClass: 'toast-top-right',
+            ...toastr_config_info,
             timerProgressBar: true,
             timeOut: 10000,
-            extendedTimeOut: 10000,
-            tapToDismiss: false,
-            preventDuplicates: true,
-            newestOnTop: true,
-            showMethod: "show",
-            hideMethod: "hide"
+            extendedTimeOut: 10000
         };
 
         async function submitForm(event) {
@@ -156,7 +139,7 @@
             const name = apiName || document.getElementById("name").value.trim();
             const email = apiEmail || document.getElementById("email").value.trim();
             const message = document.getElementById("message").value.trim();
-            const token = getToken();
+            const { token } = getToken();
 
             if (!name || !email) {
                 showSwal("Error", "Name and Email are required!", "error");
@@ -215,35 +198,36 @@
                     const response = await fetch(`/api/message?mid=${mid}&mid_hash=${mid_hash}`);
                     const data = await response.json();
 
-                    if (data.status) {
-                        if (data.status === "sending" && sending_toastr_id === null) {
-                            // Send new toastr
-                            toastr.clear(toastr_id);
-                            sending_toastr_id = toastr.info(
-                                `Your message #${mid} is being delivered`, 'Delivering...',
-                                toastr_config_info
-                            );
-                        }
-                        if (data.status !== "pending" && data.status !== "sending") {
-                            clearInterval(interval);
-                            toastr.clear(sending_toastr_id);
+                    if (!data.status) { return; }
 
-                            if (data.status === "sent") {
-                                toastr.success(
-                                    `Your message #${mid} has been delivered successfully`, 'Success', 
-                                    toastr_config_success_or_fail
-                                );
-                            } else if (data.status === "failed") {
-                                toastr.error(
-                                    `Your message #${mid} could not be delivered`, 'Delivery Failed', 
-                                    toastr_config_success_or_fail
-                                );
-                            } else {
-                                toastr.warning(
-                                    `We could not verify the delivery status of your message #${mid}`, 'Unknown Status', 
-                                    toastr_config_success_or_fail
-                                );
-                            }
+                    if (data.status === "sending" && sending_toastr_id === null) {
+                        // Send new toastr
+                        toastr.clear(toastr_id);
+                        sending_toastr_id = toastr.info(
+                            `Your message #${mid} is being delivered`, 'Delivering...',
+                            toastr_config_info
+                        );
+                    }
+                    if (data.status !== "pending" && data.status !== "sending") {
+                        clearInterval(interval);
+                        toastr.clear(toastr_id);
+                        toastr.clear(sending_toastr_id);
+
+                        if (data.status === "sent") {
+                            toastr.success(
+                                `Your message #${mid} has been delivered successfully`, 'Success', 
+                                toastr_config_success_or_fail
+                            );
+                        } else if (data.status === "failed") {
+                            toastr.error(
+                                `Your message #${mid} could not be delivered`, 'Delivery Failed', 
+                                toastr_config_success_or_fail
+                            );
+                        } else {
+                            toastr.warning(
+                                `We could not verify the delivery status of your message #${mid}`, 'Unknown Status', 
+                                toastr_config_success_or_fail
+                            );
                         }
                     }
                 } catch (error) {
@@ -269,7 +253,7 @@
 
             const diffMs = utcDate - now;
             const diffMinutes = Math.round(diffMs / (1000 * 60));
-            const diffHours = Math.round(diffMinutes / 60);
+            // const diffHours = Math.round(diffMinutes / 60); // unused
             const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
             let timeDescription;
@@ -279,7 +263,7 @@
             } else if (diffMinutes >= -3 && diffMinutes < 0) { // late update
                 isBusy = !isBusy;
                 timeDescription = "right now";
-            } else if (diffMinutes < 0) { // should not happen since updates happen every 2 mins
+            } else if (diffMinutes < -3) { // should not happen since updates happen every 2 mins
                 timeDescription = "at the moment";
             } else if (diffDays >= 7) { // fallback to original format
                 timeDescription = `until ${timestampStr}`;
@@ -306,22 +290,15 @@
                 }
             }
 
-            return {
-                isBusy,
-                timeDescription
-            };
+            return { isBusy, timeDescription };
         }
 
         async function showCalendarStatus() {
             const { isBusy, timeDescription } = await getCalendarStatus();
 
             const calendarStatus = document.getElementById("calendarStatus");
-            if (isBusy) {
-                calendarStatus.innerHTML = `I am busy ${timeDescription}<br/>To reach me, send an <font color="orange"><b>Urgent</b></font> message below`;
-            } else {
-                calendarStatus.innerHTML = `I am available ${timeDescription}<br/>You should expect a response immediately`;
-            }
-
+            calendarStatus.innerHTML = isBusy ? `I am busy ${timeDescription}<br/>To reach me, send an <font color="orange"><b>Urgent</b></font> message below`
+                                        : `I am available ${timeDescription}<br/>You should expect a response immediately`;
             calendarStatus.style.display = "block";
         }
 

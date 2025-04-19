@@ -1,17 +1,11 @@
 function getCookie(name) {
-    let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
     return match ? match[2] : null;
 }
 
 function getToken() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let token = urlParams.get("token");
-
-    if (!token) {
-        token = getCookie("token");
-    }
-
-    return token;
+    const token = new URLSearchParams(window.location.search).get("token");
+    return token ? { token, source: "params" } : { token: getCookie("token"), source: "cookie" };
 }
 
 function setToken(token) {
@@ -19,23 +13,21 @@ function setToken(token) {
 }
 
 function isValidEmail(email) {
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailPattern.test(email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 async function fetchVersion() {
     try {
-        await fetch('/api/version')
-            .then(response => response.json())
-            .then(data => {
-                if (data.deployment == "beta" || data.deployment == "dev") {
-                    document.getElementById("version").textContent = `${data.version} (${data.deployment} build)`;
-                    document.getElementById("betaWarning").style.display = "block";
-                } else {
-                    document.getElementById("version").textContent = data.version;
-                    document.getElementById("betaWarning").style.display = "none";
-                }
-            });
+        const response = await fetch('/api/version');
+        const data = await response.json();
+
+        if (data.deployment === "beta" || data.deployment === "dev") {
+            document.getElementById("version").textContent = `${data.version} (${data.deployment} build)`;
+            document.getElementById("betaWarning").style.display = "block";
+        } else {
+            document.getElementById("version").textContent = data.version;
+            document.getElementById("betaWarning").style.display = "none";
+        }
     } catch (error) {
         console.error("Failed to fetch version: ", error);
     }
@@ -43,16 +35,14 @@ async function fetchVersion() {
 
 function showSwal(title, text, icon, redirectUrl = null, timer = 3000) {
     Swal.fire({
-        title: title,
-        text: text,
-        icon: icon,
-        timer: timer,
+        title,
+        text,
+        icon,
+        timer,
         timerProgressBar: true,
         showConfirmButton: false
     }).then(() => {
-        if (redirectUrl) {
-            window.location.href = redirectUrl;
-        }
+        if (redirectUrl) window.location.href = redirectUrl;
     });
 }
 
