@@ -6,7 +6,9 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{state::AppState, utils::check_hash};
+use crate::constants::MID_HASH_KEY;
+use crate::state::AppState;
+use crate::utils::check_hash;
 
 #[derive(Deserialize)]
 pub struct MessageStatusRequest {
@@ -24,7 +26,11 @@ pub async fn handle_message_query(
     Query(params): Query<MessageStatusRequest>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    if !check_hash(&params.mid.to_string(), &params.mid_hash) {
+    if !check_hash(
+        &params.mid.to_string(),
+        &params.mid_hash,
+        MID_HASH_KEY.as_str(),
+    ) {
         return (StatusCode::BAD_REQUEST, "Hash validation failed.").into_response();
     }
 

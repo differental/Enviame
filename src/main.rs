@@ -5,7 +5,7 @@ use axum::{
 use axum_csrf::{CsrfConfig, CsrfLayer};
 use dotenvy::dotenv;
 use sqlx::PgPool;
-use std::{net::SocketAddr, sync::Arc};
+use std::{env, net::SocketAddr, sync::Arc};
 use tokio::{net::TcpListener, sync::RwLock};
 
 mod routes;
@@ -34,7 +34,7 @@ use state::{AppState, CalendarCache};
 async fn main() -> Result<(), sqlx::Error> {
     dotenv().ok();
 
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db_pool = PgPool::connect(&database_url).await?;
 
     let initial_cache = CalendarCache {
@@ -48,7 +48,7 @@ async fn main() -> Result<(), sqlx::Error> {
         status: initial_cache,
     };
 
-    let port: u16 = std::env::var("APP_PORT")
+    let port: u16 = env::var("APP_PORT")
         .expect("APP_PORT must be set")
         .parse()
         .expect("APP_PORT must be a valid number");

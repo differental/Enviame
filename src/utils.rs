@@ -1,7 +1,6 @@
 use hmac::{Hmac, Mac};
 use rand::{Rng, distr::Alphanumeric, rng};
 use sha2::Sha256;
-use std::env;
 
 pub fn generate_random_token() -> String {
     rng()
@@ -19,17 +18,16 @@ pub fn capitalize_first(s: String) -> String {
     }
 }
 
-pub fn generate_hash(str: &str) -> String {
-    let key = env::var("HASH_KEY").expect("HASH_KEY must be set");
-    let mut mac =
-        Hmac::<Sha256>::new_from_slice(key.as_bytes()).expect("HMAC can take a key of any size");
+pub fn generate_hash(str: &str, hash_key: &str) -> String {
+    let mut mac = Hmac::<Sha256>::new_from_slice(hash_key.as_bytes())
+        .expect("HMAC can take a key of any size");
     mac.update(str.as_bytes());
     let result = mac.finalize();
     let code_bytes = result.into_bytes();
     hex::encode(code_bytes) // Convert to hex string
 }
 
-pub fn check_hash(str: &str, provided_hash: &str) -> bool {
-    let expected_hash = generate_hash(str);
+pub fn check_hash(str: &str, provided_hash: &str, hash_key: &str) -> bool {
+    let expected_hash = generate_hash(str, hash_key);
     expected_hash == provided_hash
 }

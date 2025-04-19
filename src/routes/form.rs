@@ -1,9 +1,10 @@
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use axum_csrf::CsrfToken;
 use serde::{Deserialize, Serialize};
-use std::env;
 
-use crate::{state::AppState, utils::generate_hash};
+use crate::constants::{ALLOW_MODIFY_DB, MID_HASH_KEY};
+use crate::state::AppState;
+use crate::utils::generate_hash;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -49,10 +50,8 @@ pub async fn handle_form_submission(
         return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
     }
 
-    // If not prod or beta, do not modify database or send email
-    if env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
-        && env::var("DEPLOY_ENV").unwrap_or_default() != "beta"
-    {
+    // If not prod or beta, do not modify database. See constants
+    if !*ALLOW_MODIFY_DB {
         return (
             StatusCode::IM_A_TEAPOT,
             "Form submission ignored. This is not a production build.",
@@ -87,7 +86,7 @@ pub async fn handle_form_submission(
         .await
         .expect("Failed to insert data")
         .id;
-    let mid_hash = generate_hash(&message_id.to_string());
+    let mid_hash = generate_hash(&message_id.to_string(), &MID_HASH_KEY);
 
     (
         StatusCode::ACCEPTED,

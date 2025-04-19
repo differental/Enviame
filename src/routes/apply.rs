@@ -7,9 +7,10 @@ use axum::{
 use axum_csrf::CsrfToken;
 use reqwest::Client;
 use serde::Deserialize;
-use std::env;
 
-use crate::{state::AppState, utils::generate_random_token};
+use crate::constants::{ALLOW_MODIFY_DB, RECAPTCHA_SECRET_KEY};
+use crate::state::AppState;
+use crate::utils::generate_random_token;
 
 #[derive(Deserialize)]
 pub struct ApplyRequest {
@@ -34,10 +35,8 @@ pub async fn handle_apply(
         return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
     }
 
-    // If not prod or beta, do not modify database
-    if env::var("DEPLOY_ENV").unwrap_or_default() != "prod"
-        && env::var("DEPLOY_ENV").unwrap_or_default() != "beta"
-    {
+    // If not prod or beta, do not modify database. See constants
+    if !*ALLOW_MODIFY_DB {
         return (
             StatusCode::IM_A_TEAPOT,
             "Account application ignored. This is not a production build.",
@@ -49,10 +48,11 @@ pub async fn handle_apply(
         return (StatusCode::BAD_REQUEST, "reCAPTCHA verification failed").into_response();
     }
 
-    let recaptcha_key = env::var("RECAPTCHA_SECRET_KEY").expect("RECAPTCHA_SECRET_KEY must be set");
-
     let client = Client::new();
-    let params = [("secret", recaptcha_key), ("response", payload.recaptcha)];
+    let params = [
+        ("secret", RECAPTCHA_SECRET_KEY.as_str()),
+        ("response", &payload.recaptcha),
+    ];
 
     let res = client
         .post("https://www.google.com/recaptcha/api/siteverify")

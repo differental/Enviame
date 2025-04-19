@@ -1,155 +1,19 @@
 use lettre::message::header::ContentType;
-use lettre::transport::smtp::authentication::{Credentials, Mechanism};
-use lettre::{Message, SmtpTransport, Transport};
-use once_cell::sync::Lazy;
+use lettre::{Message, Transport};
 use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
 use tokio::task;
 use tokio::time::sleep;
 
-use crate::constants::EMAIL_DATETIME_FORMAT;
-use crate::{state::AppState, utils::capitalize_first};
-
-static NOTIFICATION_EMAIL: Lazy<String> =
-    Lazy::new(|| env::var("NOTIFICATION_EMAIL").expect("NOTIFICATION_EMAIL must be set"));
-
-static USER_EMAIL_TEMPLATE: &str = r#"<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Message Delivered Successfully</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }}
-        .container {{
-            max-width: 500px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin: auto;
-        }}
-        .header {{
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }}
-        .message {{
-            font-size: 16px;
-            color: #555;
-            padding: 10px;
-            background: #f9f9f9;
-            border-left: 4px solid #007BFF;
-            margin-top: 10px;
-        }}
-        .footer {{
-            font-size: 12px;
-            color: #777;
-            margin-top: 20px;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="header">Your message has been delivered successfully. A copy has been attached below.</div>
-    
-    <div class="message">
-        <p><strong>From:</strong> {{name}} ({{email}})</p>
-        <p><strong>Message:</strong></p>
-        <p>{{message}}</p>
-    </div>
-
-    <div class="footer">
-        Delivered by Enviame {{version}}
-    </div>
-</div>
-
-</body>
-</html>"#;
-
-static NOTIFICATION_EMAIL_TEMPLATE: &str = r#"<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Message Notification</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }}
-        .container {{
-            max-width: 500px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin: auto;
-        }}
-        .message {{
-            font-size: 16px;
-            color: #555;
-            padding: 10px;
-            background: #f9f9f9;
-            border-left: 4px solid #007BFF;
-            margin-top: 10px;
-        }}
-        .details {{
-            font-size: 14px;
-            color: #444;
-            margin-top: 15px;
-            padding: 10px;
-            background: #f4f4f4;
-            border-radius: 5px;
-        }}
-        .footer {{
-            font-size: 12px;
-            color: #777;
-            margin-top: 20px;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="message">
-        <p><strong>Message:</strong></p>
-        <p>{{message}}</p>
-    </div>
-
-    <div class="details">
-        <p><strong>Priority:</strong> {{priority}}</p>
-        <p><strong>Name:</strong> {{name}}</p>
-        <p><strong>Email:</strong> {{email}}</p>
-        <p><strong>Status:</strong> {{status}}</p>
-        <p><strong>Submitted at:</strong> {{submitted_time}}</p>
-        <p><strong>Delivered at:</strong> {{delivered_time}}</p>
-    </div>
-
-    <div class="footer">
-        Message delivered by Enviame {{version}}
-    </div>
-</div>
-
-</body>
-</html>"#;
+use crate::constants::{
+    CARGO_PKG_VERSION, EMAIL_DATETIME_FORMAT, MAILER, NOTIFICATION_EMAIL,
+    NOTIFICATION_EMAIL_TEMPLATE, USER_EMAIL_TEMPLATE,
+};
+use crate::state::AppState;
+use crate::utils::capitalize_first;
 
 async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::Result<()> {
-    let smtp_server = env::var("SMTP_SERVER").expect("SMTP_SERVER must be set");
-    let smtp_username = env::var("SMTP_USERNAME").expect("SMTP_USERNAME must be set");
-    let smtp_password = env::var("SMTP_PASSWORD").expect("SMTP_PASSWORD must be set");
-    let smtp_port = env::var("SMTP_PORT")
-        .ok()
-        .and_then(|s| s.parse::<u16>().ok())
-        .unwrap_or(587);
-
     let email = Message::builder()
         .from(from.parse()?)
         .to(to.parse()?)
@@ -157,15 +21,7 @@ async fn send_email(from: &str, to: &str, subject: &str, body: &str) -> anyhow::
         .header(ContentType::TEXT_HTML)
         .body(body.to_string())?;
 
-    let creds = Credentials::new(smtp_username, smtp_password);
-
-    let mailer = SmtpTransport::starttls_relay(&smtp_server)?
-        .port(smtp_port)
-        .credentials(creds)
-        .authentication(vec![Mechanism::Plain])
-        .build();
-
-    mailer.send(&email)?;
+    MAILER.send(&email)?;
 
     Ok(())
 }
@@ -179,8 +35,6 @@ pub async fn email_worker(state: AppState) {
     from_map.insert("standard".to_string(), from_standard);
     from_map.insert("urgent".to_string(), from_urgent);
     from_map.insert("immediate".to_string(), from_immediate);
-
-    let cargo_version = env!("CARGO_PKG_VERSION").to_string();
 
     loop {
         let messages = sqlx::query!("SELECT id, name, email, message, priority, sender, submitted_time FROM messages WHERE status = 'pending'")
@@ -220,14 +74,14 @@ pub async fn email_worker(state: AppState) {
                 .replace("{{status}}", &sender_type_capitalised)
                 .replace("{{submitted_time}}", &submitted_time)
                 .replace("{{delivered_time}}", &utc_now)
-                .replace("{{version}}", &cargo_version);
+                .replace("{{version}}", CARGO_PKG_VERSION);
 
             let user_subject = format!("[Enviame] {} Message Delivered", priority_capitalised);
             let user_body = USER_EMAIL_TEMPLATE
                 .replace("{{name}}", &msg.name)
                 .replace("{{email}}", &msg.email)
                 .replace("{{message}}", &msg.message.replace("\n", "<br>"))
-                .replace("{{version}}", &cargo_version);
+                .replace("{{version}}", CARGO_PKG_VERSION);
 
             // Send email in new thread
             task::spawn(async move {
