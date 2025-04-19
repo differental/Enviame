@@ -1,3 +1,8 @@
+-- Usage
+-- 1. createdb your_database_name
+-- 2. psql -U your_username -d your_database_name -f schema.sql
+-- 3. Change in .env, DATABASE_URL=postgresql://your_username:your_password@localhost:5432/your_database_name
+
 -- users table
 CREATE TABLE users (
     uid SERIAL PRIMARY KEY,

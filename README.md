@@ -44,23 +44,64 @@ For frequent users of "Focus Mode" or equivalent features on various devices, th
 
 A popular solution is to mute all text messages and allow calls as the "emergency option", but mobile signals are not a guarantee whilst WhatsApp has limited call filtering features.
 
-That's where Enviame comes in. Meaning "(to) send me" in Spanish, the tool is designed to allow prioritised communication from trusted friends and family to go through while blocking all other messages.
+That's where Enviame comes in. Enviame is designed to allow more nuanced control over prioritised communication from trusted friends and family.
 
 Features that integrate Enviame with smartwatches and other delivery options are planned.
 
 ## Tech Stack
 
-- **Backend**
-  - Rust
-  - Axum (framework)
-  - Tokio (async runtime)
+- **Backend**: Rust
+    - `axum`: Web Framework
+    - `tokio`: Asynchronous Runtime
+    - `lettre`: SMTP Email Delivery
+    - `sqlx`: Database Interaction
+    - `askama`: Static HTML Templating
+- **Database**: PostgreSQL
+- **Frontend**: 
+    - Static HTML
+    - Vanilla JS
+    - Bootstrap UI
 
-- **Database**
-  - PostgreSQL
+## Configuration
 
-- **Frontend**
-  - Static HTML
-  - "Vanilla" JavaScript
+`.env`: 
+
+```ini
+# Database URL, see scripts/schema.sql
+DATABASE_URL=postgres://user:password@localhost/dbname
+
+# Calendar ICS URL, optional
+CALENDAR_URL=https://example.com/personal.ics
+
+# Google reCaptcha keys
+RECAPTCHA_SITE_KEY=recaptcha_site_key
+RECAPTCHA_SECRET_KEY=recaptcha_secret
+
+# Hash key for message ID veification
+HASH_KEY=random_string_here
+
+# Recipient address of all notification emails, and reply_to address of all user emails
+NOTIFICATION_EMAIL=name@domain.com
+
+# SMTP Credentials
+SMTP_SERVER=smtp.xxx.com
+SMTP_PORT=587
+SMTP_USERNAME=name@domain.com
+SMTP_PASSWORD=abcdefghijklmnop
+
+# Address where emails are sent from
+# Can be different from SMTP_USERNAME
+SMTP_FROM=from@domain.com
+SMTP_FROM_URGENT=from-urgent@domain.com
+SMTP_FROM_IMMEDIATE=from-immediate@domain.com
+
+# App Port
+APP_PORT=3000
+
+# Deploy environment, relevant in displaying beta warning and modifying db below
+DEPLOY_ENV=dev
+```
+
 
 ## Database Schema
 
