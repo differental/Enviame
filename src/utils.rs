@@ -1,9 +1,9 @@
 use hmac::{Hmac, Mac};
-use rand::{Rng, distr::Alphanumeric, rng};
+use rand::{Rng, distr::Alphanumeric};
 use sha2::Sha256;
 
 pub fn generate_random_token() -> String {
-    rng()
+    rand::rng()
         .sample_iter(&Alphanumeric)
         .take(32) // 32-character token
         .map(char::from)

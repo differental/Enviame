@@ -29,20 +29,6 @@ pub static CARGO_PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub static MID_HASH_KEY: Lazy<String> =
     Lazy::new(|| env::var("HASH_KEY").expect("HASH_KEY must be set"));
 
-#[cfg(any())]
-// In preparation for v1.1.0 features
-// Message ID Hash Key, used in message query API
-// This should not be the same as UID_HASH_KEY
-pub static MID_HASH_KEY: Lazy<String> =
-    Lazy::new(|| env::var("MID_HASH_KEY").expect("MID_HASH_KEY must be set"));
-
-#[cfg(any())]
-// In preparation for v1.1.0 features
-// User ID Hash Key, used to generate user login tokens
-// This should not be the same as MID_HASH_KEY
-pub static UID_HASH_KEY: Lazy<String> =
-    Lazy::new(|| env::var("UID_HASH_KEY").expect("UID_HASH_KEY must be set"));
-
 // Recaptcha site key, embedded in HTML
 pub static RECAPTCHA_SITE_KEY: Lazy<String> =
     Lazy::new(|| env::var("RECAPTCHA_SITE_KEY").expect("RECAPTCHA_SITE_KEY must be set"));
