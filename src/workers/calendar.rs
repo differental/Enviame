@@ -7,7 +7,7 @@ use tokio::time::interval;
 use crate::constants::CALENDAR_DATETIME_FORMAT;
 use crate::state::{AppState, CalendarCache};
 
-static ZERO_TIME: NaiveTime = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+const ZERO_TIME: NaiveTime = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
 
 fn process_datetime(dt: DatePerhapsTime) -> Option<DateTime<Utc>> {
     match dt {

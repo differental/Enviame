@@ -7,10 +7,10 @@ use std::env;
 
 // --- Formats ---
 // Datetime format, used when sending emails
-pub static EMAIL_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+pub const EMAIL_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
 // Datetime format, used in calendar API. Frontend js must be updated if this is changed
-pub static CALENDAR_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M";
+pub const CALENDAR_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M";
 
 // --- General Configuration ---
 // Deploy environment, relevant in displaying beta warning and modifying db below
@@ -22,7 +22,7 @@ pub static ALLOW_MODIFY_DB: Lazy<bool> =
     Lazy::new(|| *DEPLOY_ENV == "prod" || *DEPLOY_ENV == "beta");
 
 // Cargo package version, as specified in Cargo.toml
-pub static CARGO_PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const CARGO_PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // --- Keys and Secrets ---
 // Message ID Hash Key, used in message query API
