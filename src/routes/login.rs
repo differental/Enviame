@@ -34,19 +34,32 @@ pub async fn handle_login(
     .unwrap();
 
     match result {
-        Some(user) => (
-            [(
-                header::SET_COOKIE,
-                format!("token={}; Path=/; Secure; SameSite=Strict", params.token),
-            )],
-            Json(LoginResponse {
-                email: Some(user.email),
-                name: Some(user.name),
-                verified: Some(user.verified),
-                role: Some(user.role),
-            }),
-        )
-            .into_response(),
+        Some(user) => {
+            if !user.verified {
+                sqlx::query!(
+                    "UPDATE users SET verified = $1 WHERE token = $2",
+                    true,
+                    params.token
+                )
+                .execute(&state.db)
+                .await
+                .unwrap();
+            }
+
+            (
+                [(
+                    header::SET_COOKIE,
+                    format!("token={}; Path=/; Secure; SameSite=Strict", params.token),
+                )],
+                Json(LoginResponse {
+                    email: Some(user.email),
+                    name: Some(user.name),
+                    verified: Some(user.verified),
+                    role: Some(user.role),
+                }),
+            )
+                .into_response()
+        }
         None => Json(LoginResponse {
             email: None,
             name: None,
