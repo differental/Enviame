@@ -2,6 +2,7 @@
   <h1>Enviame</h1>
   <h3>Priority Messenger</h3>
   <p>Demo: <a href="https://msg-beta.brianc.tech">https://msg-beta.brianc.tech</a></p>
+  <p>Project Writeup: <a href="https://gist.github.com/differental/086dfca65d17e629befb58d032a7fbf3">Gist</a></p>
   <p>
     <picture>
       <a href="https://github.com/differental/enviame/actions/workflows/ci_prod.yml">
