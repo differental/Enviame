@@ -59,17 +59,19 @@ pub async fn handle_resend_link(
                     .await
                     .unwrap()
                     {
-                        let link_result =
-                            send_login_link(&payload.name, &payload.email, &rec.token).await;
+                        tokio::spawn(async move {
+                            let _ =
+                                send_login_link(&payload.name, &payload.email, &rec.token).await;
+                        });
 
-                        if let Err(ref err) = link_result {
+                        /* if let Err(ref err) = link_result {
                             eprintln!("Login link resender failed to resend login link: {:?}", err);
                             return (
                                 StatusCode::INTERNAL_SERVER_ERROR,
                                 "Login link email failed to send.",
                             )
                                 .into_response();
-                        }
+                        } */
                     }
 
                     return (

@@ -112,16 +112,18 @@ pub async fn handle_apply(
                         }
                     }
 
-                    let link_result = send_login_link(&payload.name, &payload.email, &token).await;
+                    tokio::spawn(async move {
+                        let _ = send_login_link(&payload.name, &payload.email, &token).await;
+                    });
 
-                    if let Err(ref err) = link_result {
+                    /*if let Err(ref err) = link_result {
                         eprintln!("Application handler failed to send login link: {:?}", err);
                         return (
                             StatusCode::CREATED,
                             "Registration successful, but login link email failed to send. Please try again later.",
                         )
                             .into_response();
-                    }
+                    }*/
 
                     return (
                         StatusCode::CREATED,
