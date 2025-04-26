@@ -1,7 +1,6 @@
 use chrono::{DateTime, NaiveTime, TimeZone, Timelike, Utc};
 use icalendar::{Calendar, CalendarComponent, Component, DatePerhapsTime, EventStatus};
-use std::env;
-use std::time::Duration;
+use std::{env, time::Duration};
 use tokio::time::interval;
 
 use crate::constants::CALENDAR_DATETIME_FORMAT;

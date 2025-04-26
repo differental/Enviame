@@ -1,11 +1,7 @@
 use askama::Template;
-use lettre::message::header::ContentType;
-use lettre::{Message, Transport};
-use std::collections::HashMap;
-use std::env;
-use std::time::Duration;
-use tokio::task;
-use tokio::time::sleep;
+use lettre::{Message, Transport, message::header::ContentType};
+use std::{collections::HashMap, env, time::Duration};
+use tokio::{task, time::sleep};
 
 use crate::constants::{CARGO_PKG_VERSION, EMAIL_DATETIME_FORMAT, MAILER, NOTIFICATION_EMAIL};
 use crate::state::AppState;
