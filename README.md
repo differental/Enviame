@@ -76,6 +76,9 @@ This column is added in `v1.1.0` and designed with extensibility in mind. When d
 ### `.env`
 
 ```ini
+# Homepage url. Used when sending login links to users
+HOMEPAGE_URL=https://example.com/
+
 # Database URL, see scripts/schema.sql
 DATABASE_URL=postgres://user:password@localhost/dbname
 
