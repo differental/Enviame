@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Account Registration | Enviame{% endblock %}
+{% block title %}Resend Login Link | Enviame{% endblock %}
 
 {% block scripts %}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -8,13 +8,17 @@
 {% endblock %}
 
 {% block content %}
-    <h2 class="mb-3">Account Registration</h2>
+    <h2 class="mb-3">Resend Login Link</h2>
 
     <div class="beta-warning" id="betaWarning" style="display:none">
         🚧 You are on a beta or development build 🚧
     </div>
 
-    <form id="applyForm">
+    <div class="explanation">
+        This form will resend you a login link via email if the details you entered are correct.
+    </div>
+
+    <form id="sendLinkForm">
         <input type="hidden" id="csrfToken" value="{{ csrf_token }}"/>
 
         <div class="row g-2">
@@ -37,7 +41,7 @@
 {% block js %}
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
-        async function submitApplyForm(event) {
+        async function submitSendLinkForm(event) {
             event.preventDefault();
             
             const csrfToken = document.getElementById("csrfToken").value;
@@ -75,7 +79,7 @@
                 },
                 didOpen: async () => {
                     try {
-                        const response = await fetch("/api/apply", {
+                        const response = await fetch("/api/resendlink", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ csrf_token: csrfToken, name, email, recaptcha: recaptchaResponse })
@@ -83,9 +87,9 @@
                         const msg = await response.text();
 
                         if (response.ok) {
-                            showSwal("Registration Successful!", msg, "success", "/");
+                            showSwal("Success!", msg, "success", "/");
                         } else {
-                            showSwal("Registration Failed", msg, "error", "/", 5000);
+                            showSwal("Failed", msg, "error", "/", 5000);
                         }
                     } catch (error) {
                         showSwal("Request Failed", "Unknown Error", "error", "/", 5000);
@@ -95,6 +99,6 @@
             });
         }
 
-        document.getElementById("applyForm").addEventListener("submit", submitApplyForm);
+        document.getElementById("sendLinkForm").addEventListener("submit", submitSendLinkForm);
     </script>
 {% endblock %}

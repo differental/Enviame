@@ -31,6 +31,29 @@ struct RecaptchaResponse {
     success: bool,
 }
 
+pub async fn send_login_link(name: &str, email: &str, token: &str) -> anyhow::Result<()> {
+    // It would be more reasonable to move this to the worker
+    //    if there were significant registration/resend-link traffic
+    let subject = format!("[Enviame] Login link for {}", name);
+    let link = format!("{}?token={}", *HOMEPAGE_URL, token);
+    let link_template = LinkEmailTemplate {
+        link: &link,
+        version: CARGO_PKG_VERSION,
+    };
+    let link_body = link_template
+        .render()
+        .expect("Login link email failed to render");
+
+    send_email(
+        &FROM_STANDARD,
+        email,
+        &NOTIFICATION_EMAIL,
+        &subject,
+        &link_body,
+    )
+    .await
+}
+
 pub async fn handle_apply(
     State(state): State<AppState>,
     token: CsrfToken,
@@ -89,32 +112,13 @@ pub async fn handle_apply(
                         }
                     }
 
-                    // It would be more reasonable to move this to the worker
-                    //    if there is significant registration traffic
-                    let subject = format!("[Enviame] Login link for {}", payload.name);
-                    let link = format!("{}?token={}", *HOMEPAGE_URL, token);
-                    let link_template = LinkEmailTemplate {
-                        link: &link,
-                        version: CARGO_PKG_VERSION,
-                    };
-                    let link_body = link_template
-                        .render()
-                        .expect("Login link email failed to render");
-
-                    let link_result = send_email(
-                        &FROM_STANDARD,
-                        &payload.email,
-                        &NOTIFICATION_EMAIL,
-                        &subject,
-                        &link_body,
-                    )
-                    .await;
+                    let link_result = send_login_link(&payload.name, &payload.email, &token).await;
 
                     if let Err(ref err) = link_result {
                         eprintln!("Application handler failed to send login link: {:?}", err);
                         return (
                             StatusCode::CREATED,
-                            "Registration email failed to send. Please try again later.",
+                            "Registration successful, but login link email failed to send. Please try again later.",
                         )
                             .into_response();
                     }

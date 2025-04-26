@@ -16,7 +16,8 @@ use routes::{
     form::handle_form_submission,
     login::handle_login,
     message::handle_message_query,
-    pages::{serve_about_page, serve_apply_form, serve_index},
+    pages::{serve_about_page, serve_apply_form, serve_index, serve_resend_link_form},
+    resend_link::handle_resend_link,
     version::handle_version,
 };
 
@@ -68,9 +69,11 @@ async fn main() -> Result<(), sqlx::Error> {
         .route("/", get(serve_index))
         .route("/apply", get(serve_apply_form))
         .route("/about", get(serve_about_page))
+        .route("/resendlink", get(serve_resend_link_form))
         .route("/api/login", get(handle_login))
         .route("/api/submit", post(handle_form_submission))
         .route("/api/apply", post(handle_apply))
+        .route("/api/resendlink", post(handle_resend_link))
         .route("/api/version", get(handle_version))
         .route("/api/message", get(handle_message_query))
         .route("/api/calendar", get(handle_calendar_status_query))

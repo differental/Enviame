@@ -5,4 +5,5 @@ pub mod form;
 pub mod login;
 pub mod message;
 pub mod pages;
+pub mod resend_link;
 pub mod version;

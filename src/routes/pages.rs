@@ -39,6 +39,25 @@ pub async fn serve_apply_form(token: CsrfToken) -> impl IntoResponse {
 }
 
 #[derive(Template)]
+#[template(path = "link.html")]
+struct ResendLinkPageTemplate<'a> {
+    csrf_token: String,
+    recaptcha_site_token: &'a str,
+}
+
+pub async fn serve_resend_link_form(token: CsrfToken) -> impl IntoResponse {
+    let csrf_token = token.authenticity_token().unwrap();
+
+    let template = ResendLinkPageTemplate {
+        csrf_token,
+        recaptcha_site_token: RECAPTCHA_SITE_KEY.as_str(),
+    };
+    let rendered = template.render().unwrap();
+
+    (token, Html(rendered)).into_response()
+}
+
+#[derive(Template)]
 #[template(path = "about.html")]
 struct AboutPageTemplate;
 
