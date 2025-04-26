@@ -10,7 +10,8 @@ CREATE TABLE users (
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     token TEXT NOT NULL UNIQUE,
-    verified BOOLEAN NOT NULL
+    verified BOOLEAN NOT NULL,
+    role INTEGER NOT NULL
 );
 
 -- messages table

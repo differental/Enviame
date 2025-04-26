@@ -60,7 +60,7 @@ pub async fn handle_form_submission(
     }
 
     let user = match payload.token {
-        Some(ref token) => sqlx::query!("SELECT uid, verified FROM users WHERE token = $1", token)
+        Some(ref token) => sqlx::query!("SELECT uid, verified, role FROM users WHERE token = $1", token)
             .fetch_optional(&state.db)
             .await
             .unwrap(),
@@ -68,6 +68,7 @@ pub async fn handle_form_submission(
     };
 
     let sender_status = match user {
+        Some(ref u) if u.verified && u.role == 1 => "trusted",
         Some(ref u) if u.verified => "verified",
         Some(_) => "unverified",
         None => "guest",

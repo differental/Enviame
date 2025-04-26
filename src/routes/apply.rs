@@ -67,11 +67,12 @@ pub async fn handle_apply(
                     let token = generate_random_token();
 
                     match sqlx::query!(
-                        "INSERT INTO users (email, name, token, verified) VALUES ($1, $2, $3, $4)",
+                        "INSERT INTO users (email, name, token, verified, role) VALUES ($1, $2, $3, $4, $5)",
                         payload.email,
                         payload.name,
                         token,
-                        false
+                        false,
+                        0
                     )
                     .execute(&state.db)
                     .await

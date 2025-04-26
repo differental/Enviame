@@ -132,4 +132,5 @@ DEPLOY_ENV=dev
  email       | text                     | NO          | 
  token       | text                     | NO          | 
  verified    | boolean                  | NO          | 
+ role        | integer                  | NO          | 
 ```
