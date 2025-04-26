@@ -64,7 +64,15 @@ Features that integrate Enviame with smartwatches and other delivery options are
 
 ## Configuration
 
-`.env`: 
+### Roles
+
+The `role` column of the `users` table is used to distinguish between different categories of users. It is stored as an integer, and it is 0 by default during registration.
+
+When `role` is 1 and the user is verified (logged in via their token once), the frontend will display a golden tick instead of a blue tick, and "sender_type" of their messages will be "trusted" instead of "verified", this is also displayed in email notifications.
+
+This column is added in `v1.1.0` and designed with extensibility in mind. When deploying your own instance, you can easily add special operations or restrictions for specific `role` values. The `role` values are also returned by the login API and processed by the frontend.
+
+### `.env`
 
 ```ini
 # Database URL, see scripts/schema.sql
