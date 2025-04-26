@@ -1,0 +1,11 @@
+{% extends "email_base.html" %}
+
+{% block title %}Login Link{% endblock %}
+
+{% block content %}
+    <div class="header">Someone (hopefully you) have recently requested an account with Enviame using this email address. Please find your permanent login link below.</div>
+
+    <div class="header">
+        <a href="{{ link }}">{{ link }}</a>
+    </div>
+{% endblock %}

@@ -60,10 +60,13 @@ pub async fn handle_form_submission(
     }
 
     let user = match payload.token {
-        Some(ref token) => sqlx::query!("SELECT uid, verified, role FROM users WHERE token = $1", token)
-            .fetch_optional(&state.db)
-            .await
-            .unwrap(),
+        Some(ref token) => sqlx::query!(
+            "SELECT uid, verified, role FROM users WHERE token = $1",
+            token
+        )
+        .fetch_optional(&state.db)
+        .await
+        .unwrap(),
         None => None,
     };
 

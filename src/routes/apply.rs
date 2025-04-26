@@ -1,16 +1,22 @@
-use axum::{
-    Json,
-    extract::State,
-    http::{StatusCode, header},
-    response::IntoResponse,
-};
+use askama::Template;
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use axum_csrf::CsrfToken;
 use reqwest::Client;
 use serde::Deserialize;
 
-use crate::constants::{ALLOW_MODIFY_DB, RECAPTCHA_SECRET_KEY};
+use crate::constants::{
+    ALLOW_MODIFY_DB, CARGO_PKG_VERSION, FROM_STANDARD, HOMEPAGE_URL, NOTIFICATION_EMAIL,
+    RECAPTCHA_SECRET_KEY,
+};
 use crate::state::AppState;
-use crate::utils::generate_random_token;
+use crate::utils::{generate_random_token, send_email};
+
+#[derive(Template)]
+#[template(path = "email_link.html")]
+struct LinkEmailTemplate<'a> {
+    link: &'a str,
+    version: &'a str,
+}
 
 #[derive(Deserialize)]
 pub struct ApplyRequest {
@@ -83,12 +89,39 @@ pub async fn handle_apply(
                         }
                     }
 
-                    let cookie_header = format!("token={}; Path=/; Secure; SameSite=Strict", token);
+                    // It would be more reasonable to move this to the worker
+                    //    if there is significant registration traffic
+                    let subject = format!("[Enviame] Login link for {}", payload.name);
+                    let link = format!("{}?token={}", *HOMEPAGE_URL, token);
+                    let link_template = LinkEmailTemplate {
+                        link: &link,
+                        version: CARGO_PKG_VERSION,
+                    };
+                    let link_body = link_template
+                        .render()
+                        .expect("Login link email failed to render");
+
+                    let link_result = send_email(
+                        &FROM_STANDARD,
+                        &payload.email,
+                        &NOTIFICATION_EMAIL,
+                        &subject,
+                        &link_body,
+                    )
+                    .await;
+
+                    if let Err(ref err) = link_result {
+                        eprintln!("Application handler failed to send login link: {:?}", err);
+                        return (
+                            StatusCode::CREATED,
+                            "Registration email failed to send. Please try again later.",
+                        )
+                            .into_response();
+                    }
 
                     return (
                         StatusCode::CREATED,
-                        [(header::SET_COOKIE, cookie_header)],
-                        "Registration submitted successfully!",
+                        "Please check your email for your permanent login link.",
                     )
                         .into_response();
                 }

@@ -13,6 +13,10 @@ pub const EMAIL_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 pub const CALENDAR_DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M";
 
 // --- General Configuration ---
+// Homepage URL, relevant when sending login links to users
+pub static HOMEPAGE_URL: Lazy<String> =
+    Lazy::new(|| env::var("HOMEPAGE_URL").expect("HOMEPAGE_URL must be set"));
+
 // Deploy environment, relevant in displaying beta warning and modifying db below
 pub static DEPLOY_ENV: Lazy<String> =
     Lazy::new(|| env::var("DEPLOY_ENV").expect("DEPLOY_ENV must be set"));
@@ -70,3 +74,13 @@ pub static MAILER: Lazy<SmtpTransport> = Lazy::new(|| {
         .authentication(vec![Mechanism::Plain])
         .build()
 });
+
+// SMTP FROMs, can be different from SMTP_USERNAME
+pub static FROM_STANDARD: Lazy<String> =
+    Lazy::new(|| env::var("SMTP_FROM").expect("SMTP_FROM must be set"));
+
+pub static FROM_URGENT: Lazy<String> =
+    Lazy::new(|| env::var("SMTP_FROM_URGENT").unwrap_or((*FROM_STANDARD).clone()));
+
+pub static FROM_IMMEDIATE: Lazy<String> =
+    Lazy::new(|| env::var("SMTP_FROM_IMMEDIATE").unwrap_or((*FROM_STANDARD).clone()));

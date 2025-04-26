@@ -1,11 +1,13 @@
 use askama::Template;
-use lettre::{Message, Transport, message::header::ContentType};
-use std::{collections::HashMap, env, time::Duration};
+use std::{collections::HashMap, time::Duration};
 use tokio::{task, time::sleep};
 
-use crate::constants::{CARGO_PKG_VERSION, EMAIL_DATETIME_FORMAT, MAILER, NOTIFICATION_EMAIL};
+use crate::constants::{
+    CARGO_PKG_VERSION, EMAIL_DATETIME_FORMAT, FROM_IMMEDIATE, FROM_STANDARD, FROM_URGENT,
+    NOTIFICATION_EMAIL,
+};
 use crate::state::AppState;
-use crate::utils::capitalize_first;
+use crate::utils::{capitalize_first, send_email};
 
 #[derive(Template)]
 #[template(path = "email_notification.html")]
@@ -29,31 +31,12 @@ struct UserEmailTemplate<'a> {
     version: &'a str,
 }
 
-async fn send_email(
-    from: &str,
-    to: &str,
-    reply_to: &str,
-    subject: &str,
-    body: &str,
-) -> anyhow::Result<()> {
-    let email = Message::builder()
-        .from(from.parse()?)
-        .to(to.parse()?)
-        .reply_to(reply_to.parse()?)
-        .subject(subject)
-        .header(ContentType::TEXT_HTML)
-        .body(body.to_string())?;
-
-    MAILER.send(&email)?;
-    Ok(())
-}
-
 pub async fn email_worker(state: AppState) {
     // SMTP_FROM(s) are emails where all the emails are sent from
     // This can be different from SMTP_USERNAME
-    let from_standard = env::var("SMTP_FROM").expect("Must include a SMTP_FROM email");
-    let from_urgent = env::var("SMTP_FROM_URGENT").unwrap_or_else(|_| from_standard.clone());
-    let from_immediate = env::var("SMTP_FROM_IMMEDIATE").unwrap_or_else(|_| from_standard.clone());
+    let from_standard = &*FROM_STANDARD;
+    let from_urgent = &*FROM_URGENT;
+    let from_immediate = &*FROM_IMMEDIATE;
 
     let mut from_map = HashMap::new();
     from_map.insert("standard".to_string(), from_standard);
@@ -128,7 +111,7 @@ pub async fn email_worker(state: AppState) {
                 let mut is_ok = true;
 
                 let notification_result = send_email(
-                    &from,
+                    from,
                     &NOTIFICATION_EMAIL,
                     &msg.email,
                     &notification_subject,
@@ -142,7 +125,7 @@ pub async fn email_worker(state: AppState) {
                 }
 
                 let user_result = send_email(
-                    &from,
+                    from,
                     &msg.email,
                     &NOTIFICATION_EMAIL,
                     &user_subject,
