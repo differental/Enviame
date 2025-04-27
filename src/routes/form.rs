@@ -81,9 +81,9 @@ pub async fn handle_form_submission(
         "INSERT INTO messages (status, user_uid, sender, name, email, message, priority) VALUES ('pending', $1, $2, $3, $4, $5, $6) RETURNING id",
         user.as_ref().map(|u| u.uid),
         sender_status,
-        payload.name,
-        payload.email,
-        payload.message,
+        payload.name.trim(),
+        payload.email.trim(),
+        payload.message.trim(),
         payload.priority.to_string()
     )
         .fetch_one(&state.db)

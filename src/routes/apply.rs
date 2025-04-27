@@ -97,8 +97,8 @@ pub async fn handle_apply(
 
                     match sqlx::query!(
                         "INSERT INTO users (email, name, token, verified, role) VALUES ($1, $2, $3, $4, $5)",
-                        payload.email,
-                        payload.name,
+                        payload.email.trim(),
+                        payload.name.trim(),
                         token,
                         false,
                         0
@@ -113,7 +113,8 @@ pub async fn handle_apply(
                     }
 
                     tokio::spawn(async move {
-                        let _ = send_login_link(&payload.name, &payload.email, &token).await;
+                        let _ = send_login_link(payload.name.trim(), payload.email.trim(), &token)
+                            .await;
                     });
 
                     /* if let Err(ref err) = link_result {

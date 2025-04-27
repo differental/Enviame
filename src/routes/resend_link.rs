@@ -52,16 +52,20 @@ pub async fn handle_resend_link(
                 if recaptcha_response.success {
                     if let Some(rec) = sqlx::query!(
                         "SELECT token FROM users WHERE (email, name) = ($1, $2)",
-                        payload.email,
-                        payload.name
+                        payload.email.trim(),
+                        payload.name.trim()
                     )
                     .fetch_optional(&state.db)
                     .await
                     .unwrap()
                     {
                         tokio::spawn(async move {
-                            let _ =
-                                send_login_link(&payload.name, &payload.email, &rec.token).await;
+                            let _ = send_login_link(
+                                payload.name.trim(),
+                                payload.email.trim(),
+                                &rec.token,
+                            )
+                            .await;
                         });
 
                         /* if let Err(ref err) = link_result {
