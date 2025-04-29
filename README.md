@@ -65,11 +65,19 @@ Features that integrate Enviame with smartwatches and other delivery options are
 
 ## Configuration
 
-### Roles
+### Roles and Verification
+
+The `verified` column of the `users` table is used to mark users who have logged in once (and thus, have received and clicked the link in their email, meaning their emails addresses are verified). When a user "resends" their login link, this column is changed back to false before a successful login attempt with their token [^1]. 
+
+[^1]: The token is not reset during this process, and it is in discussion whether a token reset would make the system more robust against troll attacks.
 
 The `role` column of the `users` table is used to distinguish between different categories of users. It is stored as an integer, and it is 0 by default during registration.
 
-When `role` is 1 and the user is verified (logged in via their token once), the frontend will display a golden tick instead of a blue tick, and "sender_type" of their messages will be "trusted" instead of "verified", this is also displayed in email notifications.
+The `role` values have the following effects:
+
+- When `role` is 0 (default), the frontend will display a gray tick
+- When `role` is 1, the frontend will display a golden tick, and "sender_type" of their messages will be "trusted" instead of "verified", this is also displayed in email notifications
+- When `role` is any other integer value, the frontend will display a blue tick
 
 This column is added in `v1.1.0` and designed with extensibility in mind. When deploying your own instance, you can easily add special operations or restrictions for specific `role` values. The `role` values are also returned by the login API and processed by the frontend.
 

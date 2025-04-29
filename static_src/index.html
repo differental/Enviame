@@ -73,7 +73,7 @@
                 emailElement.disabled = true;
 
                 const tokenStatus = document.getElementById("tokenStatus");
-                tokenStatus.innerHTML = `Logged in as ${data.name} <img id="verifiedIcon" src="/assets/img/${!data.verified ? "tick_gray.svg" : data.role === 1 ? "tick_gold.svg" : "tick_blue.svg"}" width="26" height="26" style="display: inline;">`;
+                tokenStatus.innerHTML = `Logged in as ${data.name} <img id="verifiedIcon" src="/assets/img/${data.role === 0 ? "tick_gray.svg" : data.role === 1 ? "tick_gold.svg" : "tick_blue.svg"}" width="26" height="26" style="display: inline;">`;
                 tokenStatus.style.display = "block";
 
                 document.getElementById("nameFields").style.display = "none";
@@ -84,6 +84,10 @@
 
                 if (source === "params") {
                     setToken(token);
+                }
+                if (data.verified === false) {
+                    // If account was not-verified before, show the "verified" popup
+                    showSwal("Account Verified!", "Your account has been verified.", "success");
                 }
             } else if (source === "params") {
                 document.getElementById("tokenStatus").innerText = `Token Invalid: ${token}`;
