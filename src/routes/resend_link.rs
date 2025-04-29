@@ -68,6 +68,15 @@ pub async fn handle_resend_link(
                     .await
                     .unwrap()
                     {
+                        sqlx::query!(
+                            "UPDATE users SET verified = false WHERE (email, name) = ($1, $2)",
+                            payload.email.trim(),
+                            payload.name.trim()
+                        )
+                        .execute(&state.db)
+                        .await
+                        .unwrap();
+
                         tokio::spawn(async move {
                             let _ = send_login_link(
                                 payload.name.trim(),
