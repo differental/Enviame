@@ -45,11 +45,6 @@ pub async fn handle_form_submission(
     token: CsrfToken,
     Json(payload): Json<FormData>,
 ) -> impl IntoResponse {
-    // Validate csrf token
-    if token.verify(&payload.csrf_token).is_err() {
-        return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
-    }
-
     // If not prod or beta, do not modify database. See constants
     if !*ALLOW_MODIFY_DB {
         return (
@@ -57,6 +52,11 @@ pub async fn handle_form_submission(
             "Form submission ignored. This is not a production build.",
         )
             .into_response();
+    }
+
+    // Validate csrf token
+    if token.verify(&payload.csrf_token).is_err() {
+        return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
     }
 
     let user = match payload.token {

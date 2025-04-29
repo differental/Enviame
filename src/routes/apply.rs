@@ -59,11 +59,6 @@ pub async fn handle_apply(
     token: CsrfToken,
     Json(payload): Json<ApplyRequest>,
 ) -> impl IntoResponse {
-    // Validate csrf token
-    if token.verify(&payload.csrf_token).is_err() {
-        return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
-    }
-
     // If not prod or beta, do not modify database. See constants
     if !*ALLOW_MODIFY_DB {
         return (
@@ -71,6 +66,11 @@ pub async fn handle_apply(
             "Account application ignored. This is not a production build.",
         )
             .into_response();
+    }
+
+    // Validate csrf token
+    if token.verify(&payload.csrf_token).is_err() {
+        return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
     }
 
     if payload.recaptcha.is_empty() {

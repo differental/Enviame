@@ -3,7 +3,7 @@ use axum_csrf::CsrfToken;
 use reqwest::Client;
 use serde::Deserialize;
 
-use crate::constants::RECAPTCHA_SECRET_KEY;
+use crate::constants::{ALLOW_MODIFY_DB, RECAPTCHA_SECRET_KEY};
 use crate::routes::apply::send_login_link;
 use crate::state::AppState;
 
@@ -25,6 +25,15 @@ pub async fn handle_resend_link(
     token: CsrfToken,
     Json(payload): Json<ResendLinkRequest>,
 ) -> impl IntoResponse {
+    // If not prod or beta, do not modify database. See constants
+    if !*ALLOW_MODIFY_DB {
+        return (
+            StatusCode::IM_A_TEAPOT,
+            "Account application ignored. This is not a production build.",
+        )
+            .into_response();
+    }
+
     // Validate csrf token
     if token.verify(&payload.csrf_token).is_err() {
         return (StatusCode::BAD_REQUEST, "CSRF token invalid.").into_response();
