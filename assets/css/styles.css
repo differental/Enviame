@@ -26,7 +26,7 @@
     --input-border: #ccc;
     --input-placeholder-color: #888;
 
-    --link-color: #3b82f6;
+    --link-color: #4a71ea;
 }
 
 /* ==== Dark Theme ==== */
@@ -96,7 +96,7 @@ input::placeholder, textarea::placeholder {
 
 input:focus, textarea:focus {
     outline: none;
-    border-color: #007bff!important;
+    border-color: #4A71EA!important;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5)!important;
 }
 
