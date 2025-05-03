@@ -35,6 +35,16 @@ pub fn check_hash(str: &str, provided_hash: &str, hash_key: &str) -> bool {
     expected_hash == provided_hash
 }
 
+pub fn escape_html(str: String) -> String {
+    str.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#x27;")
+        .replace('/', "&#x2F;")
+        .replace('\n', "<br>")
+}
+
 pub async fn send_email(
     from: &str,
     to: &str,

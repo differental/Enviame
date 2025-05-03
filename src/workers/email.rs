@@ -7,7 +7,7 @@ use crate::constants::{
     NOTIFICATION_EMAIL,
 };
 use crate::state::AppState;
-use crate::utils::{capitalize_first, send_email};
+use crate::utils::{capitalize_first, escape_html, send_email};
 
 #[derive(Template)]
 #[template(path = "email_notification.html")]
@@ -69,7 +69,7 @@ pub async fn email_worker(state: AppState) {
             let submitted_time = msg.submitted_time.format(EMAIL_DATETIME_FORMAT).to_string();
 
             // Email contents
-            let message_content = msg.message.replace("\n", "<br>");
+            let message_content = escape_html(msg.message);
 
             let notification_subject = format!(
                 "[Enviame] {} Message from {}({})",

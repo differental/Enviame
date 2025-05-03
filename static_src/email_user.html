@@ -8,6 +8,6 @@
     <div class="message">
         <p><strong>From:</strong> {{+ name +}} ({{ email }})</p>
         <p><strong>Message:</strong></p>
-        <p>{{ message }}</p>
+        <p>{{ message|safe }}</p>
     </div>
 {% endblock %}
