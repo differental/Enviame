@@ -3,14 +3,19 @@ use icalendar::{Calendar, CalendarComponent, Component, DatePerhapsTime, EventSt
 use std::{env, time::Duration};
 use tokio::time::interval;
 
-use crate::constants::CALENDAR_DATETIME_FORMAT;
+use crate::constants::{ALL_DAY_TZ, CALENDAR_DATETIME_FORMAT};
 use crate::state::{AppState, CalendarCache};
 
 const ZERO_TIME: NaiveTime = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
 
 fn process_datetime(dt: DatePerhapsTime) -> Option<DateTime<Utc>> {
     match dt {
-        DatePerhapsTime::Date(date) => Some(date.and_time(ZERO_TIME).and_utc()),
+        DatePerhapsTime::Date(date) => Some(
+            date.and_time(ZERO_TIME)
+                .and_local_timezone(*ALL_DAY_TZ)
+                .unwrap()
+                .to_utc(),
+        ),
         DatePerhapsTime::DateTime(dt) => dt.try_into_utc(),
     }
 }

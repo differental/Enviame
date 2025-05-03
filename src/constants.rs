@@ -1,9 +1,20 @@
+use chrono_tz::Tz;
 use lettre::{
     SmtpTransport,
     transport::smtp::authentication::{Credentials, Mechanism},
 };
 use once_cell::sync::Lazy;
 use std::env;
+
+// --- Calendar ---
+// Your timezone, used as the timezone of "00:00" for all-day events
+pub static ALL_DAY_TZ: Lazy<Tz> = Lazy::new(|| {
+    env::var("LOCAL_TIMEZONE")
+        .unwrap_or("UTC".to_owned())
+        .trim()
+        .parse::<Tz>()
+        .unwrap()
+});
 
 // --- Formats ---
 // Datetime format, used when sending emails
