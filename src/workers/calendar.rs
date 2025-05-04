@@ -1,9 +1,9 @@
-use chrono::{DateTime, NaiveTime, TimeZone, Timelike, Utc};
+use chrono::{DateTime, NaiveTime, Utc};
 use icalendar::{Calendar, CalendarComponent, Component, DatePerhapsTime, EventStatus};
 use std::{env, time::Duration};
 use tokio::time::interval;
 
-use crate::constants::{ALL_DAY_TZ, CALENDAR_DATETIME_FORMAT};
+use crate::constants::{CALENDAR_DATETIME_FORMAT, DEFAULT_TZ};
 use crate::state::{AppState, CalendarCache};
 
 const ZERO_TIME: NaiveTime = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
@@ -12,7 +12,7 @@ fn process_datetime(dt: DatePerhapsTime) -> Option<DateTime<Utc>> {
     match dt {
         DatePerhapsTime::Date(date) => Some(
             date.and_time(ZERO_TIME)
-                .and_local_timezone(*ALL_DAY_TZ)
+                .and_local_timezone(*DEFAULT_TZ)
                 .unwrap()
                 .to_utc(),
         ),
@@ -26,16 +26,15 @@ async fn get_busy_status(url: &str) -> anyhow::Result<(bool, DateTime<Utc>)> {
         .parse::<Calendar>()
         .map_err(|e| anyhow::anyhow!(e))?;
 
-    let mut is_busy = false;
-    // if busy, return this: the latest (from now) where the calendar is free
-    let mut last_dt_end = chrono::Utc::now();
-    // if not busy, return this: the earliest where the calendar isn't free
-    let mut first_dt_start = Utc.with_ymd_and_hms(2099, 12, 31, 23, 59, 59).unwrap();
+    let now = Utc::now();
+    let tomorrow_now = Utc::now() + chrono::Duration::days(1);
 
     // Rule for events:
     // 1. Dates become 00.00, hence all-day one-day event doesn't count but all-day multi-day events do count
     // 2. Must have both a valid dt_start and a valid dt_end
-    // 3. Assume no overlapping events (if there's a 9-11 and a 10-12, it will report 11 not 12)
+
+    let mut blocking_datetimes = Vec::<(DateTime<Utc>, DateTime<Utc>)>::new();
+
     for component in &calendar.components {
         if let CalendarComponent::Event(event) = component {
             if let Some(status) = event.get_status() {
@@ -48,65 +47,55 @@ async fn get_busy_status(url: &str) -> anyhow::Result<(bool, DateTime<Utc>)> {
                 if let (Some(dt_start), Some(dt_end)) =
                     (process_datetime(dt_start), process_datetime(dt_end))
                 {
-                    if dt_start < chrono::Utc::now()
-                        && dt_end > chrono::Utc::now()
-                        && dt_end > last_dt_end
-                    {
-                        is_busy = true;
-                        last_dt_end = dt_end;
-                    } else if !is_busy && dt_start > chrono::Utc::now() && dt_start < first_dt_start
-                    {
-                        first_dt_start = dt_start;
+                    if dt_end >= now && dt_start <= tomorrow_now {
+                        // Handling finished or >24h later events has no point
+                        blocking_datetimes.push((dt_start, dt_end));
                     }
                 }
             }
         }
     }
 
-    // Nighttime configuration - configured at 22.00-07.00 **UTC**
+    let get_time = |offset_days: i64, hour: u32| {
+        (now + chrono::Duration::days(offset_days))
+            .date_naive()
+            .and_hms_opt(hour, 0, 0)
+            .unwrap()
+            .and_local_timezone(*DEFAULT_TZ)
+            .unwrap()
+            .to_utc()
+    };
+
+    // Nighttime configuration - configured at 22.00-07.00 in user-configured timezone
     const START_HOUR: u32 = 22;
     const END_HOUR: u32 = 7;
 
-    let now = chrono::Utc::now();
-    let hour = now.hour();
+    // Add two blocking periods: Yesterday 22.00 to today 07.00, and today 22.00 to tomorrow 07.00
+    let yesterday_start = get_time(-1, START_HOUR);
+    let today_end = get_time(0, END_HOUR);
+    let today_start = get_time(0, START_HOUR);
+    let tomorrow_end = get_time(1, END_HOUR);
 
-    #[allow(clippy::manual_range_contains)]
-    if hour >= START_HOUR || hour < END_HOUR {
-        is_busy = true;
-        let next_morning = if hour < END_HOUR {
-            now.date_naive()
-                .and_hms_opt(END_HOUR, 0, 0)
-                .unwrap()
-                .and_utc()
-        } else {
-            (now + chrono::Duration::days(1))
-                .date_naive()
-                .and_hms_opt(END_HOUR, 0, 0)
-                .unwrap()
-                .and_utc()
-        };
-        if next_morning > last_dt_end {
-            last_dt_end = next_morning;
-        }
+    if today_end >= now {
+        blocking_datetimes.push((yesterday_start, today_end));
     }
-    if !is_busy {
-        let this_night = now
-            .date_naive()
-            .and_hms_opt(START_HOUR, 0, 0)
-            .unwrap()
-            .and_utc();
-        let next_night_start = if now < this_night {
-            this_night
-        } else {
-            (now + chrono::Duration::days(1))
-                .date_naive()
-                .and_hms_opt(START_HOUR, 0, 0)
-                .unwrap()
-                .and_utc()
-        };
-        if next_night_start < first_dt_start {
-            first_dt_start = next_night_start;
+    blocking_datetimes.push((today_start, tomorrow_end));
+    blocking_datetimes.sort();
+
+    let mut is_busy = false;
+    // if busy, return this: the latest (from now) where the calendar is free
+    let mut last_dt_end = now;
+    // if not busy, return this: the earliest where the calendar isn't free
+    // This initilisation has no point since blocking_datetimes cannot be empty
+    let mut first_dt_start = now;
+
+    for (dt_start, dt_end) in blocking_datetimes {
+        if dt_start > last_dt_end {
+            first_dt_start = dt_start;
+            break;
         }
+        is_busy = true;
+        last_dt_end = last_dt_end.max(dt_end);
     }
 
     Ok((is_busy, if is_busy { last_dt_end } else { first_dt_start }))

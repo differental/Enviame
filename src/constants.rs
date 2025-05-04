@@ -7,8 +7,8 @@ use once_cell::sync::Lazy;
 use std::env;
 
 // --- Calendar ---
-// Your timezone, used as the timezone of "00:00" for all-day events
-pub static ALL_DAY_TZ: Lazy<Tz> = Lazy::new(|| {
+// Your timezone, used as the timezone of "00:00" for all-day events and the timezone for sleep-time blocking periods
+pub static DEFAULT_TZ: Lazy<Tz> = Lazy::new(|| {
     env::var("LOCAL_TIMEZONE")
         .unwrap_or("UTC".to_owned())
         .trim()
