@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   test-rust:
     docker:
-      - image: cimg/rust:1.77
+      - image: cimg/rust:1.86.0
     steps:
       - checkout
       - restore_cache:
@@ -14,11 +14,9 @@ jobs:
           paths:
             - ~/.cargo
   deploy:
-    # This is an example deploy job, not actually used by the workflow
     docker:
       - image: cimg/base:stable
     steps:
-      # Replace this with steps to deploy to users
       - run:
           name: deploy
           command: '#e.g. ./deploy.sh'
