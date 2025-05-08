@@ -28,7 +28,7 @@ chrono = "0.4"
 chrono-tz = "0.10"
 
 [build-dependencies]
-html-minifier = "5.0"
+minifier = { version = "0.3", default-features = false, features = ["html"] }
 
 [profile.release-prod]
 inherits = "release"
