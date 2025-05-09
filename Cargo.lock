@@ -586,7 +586,6 @@ dependencies = [
  "lettre",
  "mime_guess",
  "minifier",
- "once_cell",
  "rand 0.9.1",
  "reqwest",
  "rust-embed",
