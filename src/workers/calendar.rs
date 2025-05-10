@@ -119,6 +119,8 @@ pub async fn calendar_worker(state: AppState) {
 
         match get_busy_status(&calendar_url).await {
             Ok(busy_status) => {
+                consecutive_fail_count = 0;
+
                 let new_cache = CalendarCache {
                     is_busy: busy_status.0,
                     timestamp: busy_status.1.format(CALENDAR_DATETIME_FORMAT).to_string(),
