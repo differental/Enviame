@@ -30,7 +30,9 @@ async fn get_busy_status(url: &str) -> anyhow::Result<(bool, DateTime<Utc>)> {
     let tomorrow_now = Utc::now() + chrono::Duration::days(1);
 
     // Rule for events:
-    // 1. Dates become 00.00, hence all-day one-day event doesn't count but all-day multi-day events do count
+    // 1. Dates (All-day events) become 00.00 in user-specified timezone.
+    //      Note that for all-day events, DTEND is (typically) the day
+    //      after the actual end date, so this works as intended.
     // 2. Must have both a valid dt_start and a valid dt_end
 
     let mut blocking_datetimes = Vec::<(DateTime<Utc>, DateTime<Utc>)>::new();
@@ -48,7 +50,9 @@ async fn get_busy_status(url: &str) -> anyhow::Result<(bool, DateTime<Utc>)> {
                     (process_datetime(dt_start), process_datetime(dt_end))
                 {
                     if dt_end >= now && dt_start <= tomorrow_now {
-                        // Handling finished or >24h later events has no point
+                        // Handling finished events has no point
+                        //    but it might be worth considering whether
+                        //    including ALL future events will be more helpful
                         blocking_datetimes.push((dt_start, dt_end));
                     }
                 }
