@@ -1,4 +1,4 @@
-use minifier::html::minify;
+use html_minifier::minify;
 use std::{fs, path::Path};
 
 fn main() {
@@ -12,7 +12,7 @@ fn main() {
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("html") {
             let html = fs::read_to_string(&path).unwrap();
-            let minified = minify(&html);
+            let minified = minify(&html).unwrap();
             let output_path = out_dir.join(path.file_name().unwrap());
             fs::write(output_path, minified).unwrap();
         }
