@@ -6,25 +6,25 @@ license = "AGPL-3.0-only"
 build = "build.rs"
 
 [dependencies]
-axum = { version = "0.8", default-features = false, features = ["json", "tokio", "query", "http2"] }
-tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "time"] }
-serde = { version = "1", default-features = false, features = ["derive"] }
-sqlx = { version = "0.8", default-features = false, features = ["macros", "postgres", "runtime-tokio", "tls-native-tls", "chrono"] }
-lettre = { version = "0.11", default-features = false, features = ["builder", "smtp-transport", "tokio1-native-tls"] }
-dotenvy = "0.15"
-rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
-reqwest = { version = "0.12", default-features = false, features = ["default-tls", "http2", "json"] }
-axum_csrf = { version = "0.11", features = ["layer"] }
-askama = { version = "0.14", default-features = false, features = ["config", "derive", "std"] }
 anyhow = { version = "1.0", default-features = false }
-sha2 = "0.10"
-hmac = "0.12"
-hex = "0.4"
-rust-embed = "8.7"
-mime_guess = "2.0"
-icalendar = { version = "0.16", features = ["chrono-tz"] }
+askama = { version = "0.14", default-features = false, features = ["config", "derive", "std"] }
+axum = { version = "0.8", default-features = false, features = ["json", "tokio", "query", "http2"] }
+axum_csrf = { version = "0.11", features = ["layer"] }
 chrono = "0.4"
 chrono-tz = "0.10"
+dotenvy = "0.15"
+hex = "0.4"
+hmac = "0.12"
+icalendar = { version = "0.16", features = ["chrono-tz"] }
+lettre = { version = "0.11", default-features = false, features = ["builder", "smtp-transport", "tokio1-native-tls"] }
+mime_guess = "2.0"
+rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
+reqwest = { version = "0.12", default-features = false, features = ["default-tls", "http2", "json"] }
+rust-embed = "8.7"
+serde = { version = "1", default-features = false, features = ["derive"] }
+sha2 = "0.10"
+sqlx = { version = "0.8", default-features = false, features = ["macros", "postgres", "runtime-tokio", "tls-native-tls", "chrono"] }
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "time"] }
 
 [build-dependencies]
 html-minifier = "5.0"
