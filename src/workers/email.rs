@@ -104,7 +104,7 @@ pub async fn email_worker(state: AppState) {
                 .render()
                 .expect("Notification email failed to render");
 
-            let user_subject = format!("[Enviame] {} Message Delivered", priority_capitalised);
+            let user_subject = format!("[Enviame] {priority_capitalised} Message Delivered");
             let user_template = UserEmailTemplate {
                 name: &msg.name,
                 email: &msg.email,
@@ -135,7 +135,7 @@ pub async fn email_worker(state: AppState) {
                 .await;
 
                 if let Err(ref err) = notification_result {
-                    eprintln!("Email worker failed to send notification: {:?}", err);
+                    eprintln!("Email worker failed to send notification: {err:?}");
                     is_ok = false;
                 }
 
@@ -149,7 +149,7 @@ pub async fn email_worker(state: AppState) {
                 .await;
 
                 if let Err(ref err) = user_result {
-                    eprintln!("Email worker failed to send message receipt: {:?}", err);
+                    eprintln!("Email worker failed to send message receipt: {err:?}");
                     is_ok = false;
                 }
 

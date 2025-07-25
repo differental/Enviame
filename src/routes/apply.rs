@@ -49,7 +49,7 @@ struct RecaptchaResponse {
 pub async fn send_login_link(name: &str, email: &str, token: &str) -> anyhow::Result<()> {
     // It would be more reasonable to move this to the worker
     //    if there were significant registration/resend-link traffic
-    let subject = format!("[Enviame] Login link for {}", name);
+    let subject = format!("[Enviame] Login link for {name}");
     let link = format!("{}?token={}", *HOMEPAGE_URL, token);
     let link_template = LinkEmailTemplate {
         link: &link,

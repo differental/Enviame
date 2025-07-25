@@ -97,7 +97,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    println!("Server running on {}", addr);
+    println!("Server running on {addr}");
 
     let listener = TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();

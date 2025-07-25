@@ -85,11 +85,11 @@ async fn get_busy_status(url: &str) -> anyhow::Result<(bool, DateTime<Utc>)> {
             .to_utc()
     };
 
-    // Nighttime configuration - configured at 22.00-07.00 in user-configured timezone
-    const START_HOUR: u32 = 22;
-    const END_HOUR: u32 = 7;
+    // Nighttime configuration - configured at 23.00-08.00 in user-configured timezone
+    const START_HOUR: u32 = 23;
+    const END_HOUR: u32 = 8;
 
-    // Add two blocking periods: Yesterday 22.00 to today 07.00, and today 22.00 to tomorrow 07.00
+    // Add two blocking periods: Yesterday 23.00 to today 08.00, and today 23.00 to tomorrow 08.00
     let yesterday_start = get_time(-1, START_HOUR);
     let today_end = get_time(0, END_HOUR);
     let today_start = get_time(0, START_HOUR);
@@ -158,7 +158,7 @@ pub async fn calendar_worker(state: AppState) {
             }
             Err(ref err) => {
                 consecutive_fail_count += 1;
-                eprintln!("Calendar worker failed to update busy status: {:?}", err);
+                eprintln!("Calendar worker failed to update busy status: {err:?}");
                 if consecutive_fail_count >= MAX_CONSECUTIVE_FAILS {
                     return;
                 }
