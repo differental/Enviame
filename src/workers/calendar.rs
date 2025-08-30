@@ -54,23 +54,22 @@ async fn get_busy_status(url: &str) -> anyhow::Result<(bool, DateTime<Utc>)> {
 
     for component in &calendar.components {
         if let CalendarComponent::Event(event) = component {
-            if let Some(status) = event.get_status() {
-                if status == EventStatus::Cancelled {
-                    continue;
-                }
+            if let Some(status) = event.get_status()
+                && status == EventStatus::Cancelled
+            {
+                continue;
             }
 
-            if let (Some(dt_start), Some(dt_end)) = (event.get_start(), event.get_end()) {
-                if let (Some(dt_start), Some(dt_end)) =
+            if let (Some(dt_start), Some(dt_end)) = (event.get_start(), event.get_end())
+                && let (Some(dt_start), Some(dt_end)) =
                     (process_datetime(dt_start), process_datetime(dt_end))
-                {
-                    if dt_end >= now && dt_start <= tomorrow_now {
-                        // Handling finished events has no point
-                        //    but it might be worth considering whether
-                        //    including ALL future events will be more helpful
-                        blocking_datetimes.push((dt_start, dt_end));
-                    }
-                }
+                && dt_end >= now
+                && dt_start <= tomorrow_now
+            {
+                // Handling finished events has no point
+                //    but it might be worth considering whether
+                //    including ALL future events will be more helpful
+                blocking_datetimes.push((dt_start, dt_end));
             }
         }
     }

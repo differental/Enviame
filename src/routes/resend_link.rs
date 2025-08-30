@@ -72,51 +72,48 @@ pub async fn handle_resend_link(
 
     match res {
         Ok(response) => {
-            if let Ok(recaptcha_response) = response.json::<RecaptchaResponse>().await {
-                if recaptcha_response.success {
-                    if let Some(rec) = sqlx::query!(
-                        "SELECT token FROM users WHERE (email, name) = ($1, $2)",
+            if let Ok(recaptcha_response) = response.json::<RecaptchaResponse>().await
+                && recaptcha_response.success
+            {
+                if let Some(rec) = sqlx::query!(
+                    "SELECT token FROM users WHERE (email, name) = ($1, $2)",
+                    payload.email.trim(),
+                    payload.name.trim()
+                )
+                .fetch_optional(&state.db)
+                .await
+                .unwrap()
+                {
+                    sqlx::query!(
+                        "UPDATE users SET verified = false WHERE (email, name) = ($1, $2)",
                         payload.email.trim(),
                         payload.name.trim()
                     )
-                    .fetch_optional(&state.db)
+                    .execute(&state.db)
                     .await
-                    .unwrap()
-                    {
-                        sqlx::query!(
-                            "UPDATE users SET verified = false WHERE (email, name) = ($1, $2)",
-                            payload.email.trim(),
-                            payload.name.trim()
+                    .unwrap();
+
+                    tokio::spawn(async move {
+                        let _ =
+                            send_login_link(payload.name.trim(), payload.email.trim(), &rec.token)
+                                .await;
+                    });
+
+                    /* if let Err(ref err) = link_result {
+                        eprintln!("Login link resender failed to resend login link: {:?}", err);
+                        return (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "Login link email failed to send.",
                         )
-                        .execute(&state.db)
-                        .await
-                        .unwrap();
-
-                        tokio::spawn(async move {
-                            let _ = send_login_link(
-                                payload.name.trim(),
-                                payload.email.trim(),
-                                &rec.token,
-                            )
-                            .await;
-                        });
-
-                        /* if let Err(ref err) = link_result {
-                            eprintln!("Login link resender failed to resend login link: {:?}", err);
-                            return (
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                "Login link email failed to send.",
-                            )
-                                .into_response();
-                        } */
-                    }
-
-                    return (
-                        StatusCode::ACCEPTED,
-                        "If your details are correct, please check your email for your permanent login link.",
-                    )
-                        .into_response();
+                            .into_response();
+                    } */
                 }
+
+                return (
+                    StatusCode::ACCEPTED,
+                    "If your details are correct, please check your email for your permanent login link.",
+                )
+                    .into_response();
             }
             (StatusCode::BAD_REQUEST, "reCAPTCHA verification failed").into_response()
         }

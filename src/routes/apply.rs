@@ -106,47 +106,47 @@ pub async fn handle_apply(
 
     match res {
         Ok(response) => {
-            if let Ok(recaptcha_response) = response.json::<RecaptchaResponse>().await {
-                if recaptcha_response.success {
-                    let token = generate_random_token();
+            if let Ok(recaptcha_response) = response.json::<RecaptchaResponse>().await
+                && recaptcha_response.success
+            {
+                let token = generate_random_token();
 
-                    match sqlx::query!(
-                        "INSERT INTO users (email, name, token, verified, role) VALUES ($1, $2, $3, $4, $5)",
-                        payload.email.trim(),
-                        payload.name.trim(),
-                        token,
-                        false,
-                        0
-                    )
-                    .execute(&state.db)
-                    .await
-                    {
-                        Ok(_) => (),
-                        Err(_) => {
-                            return (StatusCode::BAD_REQUEST, "Duplicate Email").into_response();
-                        }
+                match sqlx::query!(
+                    "INSERT INTO users (email, name, token, verified, role) VALUES ($1, $2, $3, $4, $5)",
+                    payload.email.trim(),
+                    payload.name.trim(),
+                    token,
+                    false,
+                    0
+                )
+                .execute(&state.db)
+                .await
+                {
+                    Ok(_) => (),
+                    Err(_) => {
+                        return (StatusCode::BAD_REQUEST, "Duplicate Email").into_response();
                     }
+                }
 
-                    tokio::spawn(async move {
-                        let _ = send_login_link(payload.name.trim(), payload.email.trim(), &token)
-                            .await;
-                    });
+                tokio::spawn(async move {
+                    let _ =
+                        send_login_link(payload.name.trim(), payload.email.trim(), &token).await;
+                });
 
-                    /* if let Err(ref err) = link_result {
-                        eprintln!("Application handler failed to send login link: {:?}", err);
-                        return (
-                            StatusCode::CREATED,
-                            "Registration successful, but login link email failed to send. Please try again later.",
-                        )
-                            .into_response();
-                    } */
-
+                /* if let Err(ref err) = link_result {
+                    eprintln!("Application handler failed to send login link: {:?}", err);
                     return (
                         StatusCode::CREATED,
-                        "Please check your email for your permanent login link.",
+                        "Registration successful, but login link email failed to send. Please try again later.",
                     )
                         .into_response();
-                }
+                } */
+
+                return (
+                    StatusCode::CREATED,
+                    "Please check your email for your permanent login link.",
+                )
+                    .into_response();
             }
             (StatusCode::BAD_REQUEST, "reCAPTCHA verification failed").into_response()
         }
