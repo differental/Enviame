@@ -1,4 +1,6 @@
 name: CI Deploy (Beta)
+permissions:
+  contents: read
 
 on:
   push:

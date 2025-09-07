@@ -1,4 +1,6 @@
 name: CI Deploy (Prod)
+permissions:
+  contents: read 
 
 on:
   push:
