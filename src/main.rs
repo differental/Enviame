@@ -18,7 +18,6 @@ use axum::{
     routing::{get, post},
 };
 use axum_csrf::{CsrfConfig, CsrfLayer};
-use dotenvy::dotenv;
 use sqlx::PgPool;
 use std::{env, net::SocketAddr, sync::Arc};
 use tokio::{net::TcpListener, sync::RwLock};
@@ -47,8 +46,8 @@ mod state;
 use state::{AppState, CalendarCache};
 
 #[tokio::main]
-async fn main() -> Result<(), sqlx::Error> {
-    dotenv().ok();
+async fn main() -> anyhow::Result<()> {
+    dotenvy::dotenv()?;
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db_pool = PgPool::connect(&database_url).await?;
