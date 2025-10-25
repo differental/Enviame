@@ -93,6 +93,15 @@ pub async fn handle_form_submission(
         None => None,
     };
 
+    // Disallow guests (temporarily)
+    if user.is_none() {
+        return (
+            StatusCode::FORBIDDEN,
+            "Guests are currently not allowed to send messages. Apply for an account below.",
+        )
+            .into_response();
+    }
+
     let sender_status = match user {
         Some(ref u) if u.verified && u.role == 1 => "trusted",
         Some(ref u) if u.verified => "verified",
