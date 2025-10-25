@@ -35,6 +35,8 @@ struct NotificationEmailTemplate<'a> {
     submitted_time: &'a str,
     delivered_time: &'a str,
     version: &'a str,
+    sender_ip: &'a str,
+    sender_ua: &'a str,
 }
 
 #[derive(Template)]
@@ -59,7 +61,7 @@ pub async fn email_worker(state: AppState) {
     from_map.insert("immediate".to_string(), from_immediate);
 
     loop {
-        let messages = sqlx::query!("SELECT id, name, email, message, priority, sender, submitted_time FROM messages WHERE status = 'pending'")
+        let messages = sqlx::query!("SELECT id, name, email, message, priority, sender, submitted_time, ua, ip FROM messages WHERE status = 'pending'")
             .fetch_all(&state.db)
             .await
             .unwrap();
@@ -99,6 +101,8 @@ pub async fn email_worker(state: AppState) {
                 submitted_time: &submitted_time,
                 delivered_time: &utc_now,
                 version: CARGO_PKG_VERSION,
+                sender_ip: &msg.ip,
+                sender_ua: &msg.ua,
             };
             let notification_body = notification_template
                 .render()

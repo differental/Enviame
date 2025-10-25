@@ -139,6 +139,8 @@ DEPLOY_ENV=dev
  priority       | text                     | NO          | 
  status         | text                     | NO          | 'pending'::text
  sender         | text                     | NO          | 
+ ua             | text                     | NO          | 
+ ip             | text                     | NO          | 
 ```
 
 `users`:

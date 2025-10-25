@@ -24,5 +24,7 @@ CREATE TABLE messages (
     message TEXT NOT NULL,
     priority TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sending', 'sent', 'failed')),
-    sender TEXT NOT NULL
+    sender TEXT NOT NULL,
+    ua TEXT NOT NULL,
+    ip TEXT NOT NULL
 );

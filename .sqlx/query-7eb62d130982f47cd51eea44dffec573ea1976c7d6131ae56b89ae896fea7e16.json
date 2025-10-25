@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO messages (status, user_uid, sender, name, email, message, priority) VALUES ('pending', $1, $2, $3, $4, $5, $6) RETURNING id",
+  "query": "INSERT INTO messages (status, user_uid, sender, name, email, message, priority, ua, ip) VALUES ('pending', $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
   "describe": {
     "columns": [
       {
@@ -16,6 +16,8 @@
         "Text",
         "Text",
         "Text",
+        "Text",
+        "Text",
         "Text"
       ]
     },
@@ -23,5 +25,5 @@
       false
     ]
   },
-  "hash": "81e6319a693a74f6aadb969f91d54b17d1b120f38276f461bb8bfd0f6523e3da"
+  "hash": "7eb62d130982f47cd51eea44dffec573ea1976c7d6131ae56b89ae896fea7e16"
 }

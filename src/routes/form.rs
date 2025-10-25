@@ -13,9 +13,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use axum::{
+    Json,
+    extract::{ConnectInfo, State},
+    http::{HeaderMap, StatusCode},
+    response::IntoResponse,
+};
 use axum_csrf::CsrfToken;
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 
 use crate::constants::{ALLOW_MODIFY_DB, MID_HASH_KEY};
 use crate::state::AppState;
@@ -58,6 +64,8 @@ struct SubmissionResponse {
 pub async fn handle_form_submission(
     State(state): State<AppState>,
     token: CsrfToken,
+    headers: HeaderMap,
+    ConnectInfo(remote_addr): ConnectInfo<SocketAddr>,
     Json(payload): Json<FormData>,
 ) -> impl IntoResponse {
     // If not prod or beta, do not modify database. See constants
@@ -92,14 +100,29 @@ pub async fn handle_form_submission(
         None => "guest",
     };
 
+    let user_agent = headers
+        .get("user-agent")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
+
+    let ip = headers
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.split(',').next())
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| remote_addr.ip().to_string());
+
     let message_id = sqlx::query!(
-        "INSERT INTO messages (status, user_uid, sender, name, email, message, priority) VALUES ('pending', $1, $2, $3, $4, $5, $6) RETURNING id",
+        "INSERT INTO messages (status, user_uid, sender, name, email, message, priority, ua, ip) VALUES ('pending', $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
         user.as_ref().map(|u| u.uid),
         sender_status,
         payload.name.trim(),
         payload.email.trim(),
         payload.message.trim(),
-        payload.priority.to_string()
+        payload.priority.to_string(),
+        user_agent,
+        ip
     )
         .fetch_one(&state.db)
         .await

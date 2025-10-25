@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, name, email, message, priority, sender, submitted_time FROM messages WHERE status = 'pending'",
+  "query": "SELECT id, name, email, message, priority, sender, submitted_time, ua, ip FROM messages WHERE status = 'pending'",
   "describe": {
     "columns": [
       {
@@ -37,6 +37,16 @@
         "ordinal": 6,
         "name": "submitted_time",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "ua",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "ip",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -49,8 +59,10 @@
       false,
       false,
       false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "bc7c686f9adac55a531c3b0af2ee84996fc0016de32186648d01e65e51584845"
+  "hash": "6422f755cc5fad5077418f20b52424a987026405e9d04057decf9ceca6644268"
 }
