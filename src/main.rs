@@ -53,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
     let db_pool = PgPool::connect(&database_url).await?;
 
     let initial_cache = CalendarCache {
-        is_busy: false,
+        is_busy: true,
         timestamp: "2099-12-31 23:59".to_owned(),
     };
     let initial_cache = Arc::new(RwLock::new(initial_cache));
