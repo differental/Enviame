@@ -4,6 +4,8 @@ services:
     restart: always
     env_file:
       - stack.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     ports:
       - 127.0.0.1:5433:5432
 
@@ -18,3 +20,5 @@ services:
     env_file:
       - stack.env
 
+volumes:
+  pgdata:
