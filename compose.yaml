@@ -14,7 +14,7 @@ services:
     depends_on:
       - db
     ports:
-      - 127.0.0.1:3000:3000
+      - 127.0.0.1:${HOST_PORT}:${APP_PORT}
     env_file:
       - stack.env
 
