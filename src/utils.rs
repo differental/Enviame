@@ -15,7 +15,7 @@
 
 use hmac::{Hmac, Mac};
 use lettre::{Message, Transport, message::header::ContentType};
-use rand::{Rng, distr::Alphanumeric};
+use rand::{RngExt, distr::Alphanumeric};
 use sha2::Sha256;
 
 use crate::constants::MAILER;
