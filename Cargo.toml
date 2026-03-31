@@ -14,7 +14,7 @@ chrono = "0.4"
 chrono-tz = "0.10"
 dotenvy = "0.15"
 hex = "0.4"
-hmac = "0.12"
+hmac = "0.13"
 icalendar = { version = "0.17", features = ["chrono-tz"] }
 lettre = { version = "0.11", default-features = false, features = ["builder", "smtp-transport", "tokio1-native-tls"] }
 mime_guess = "2.0"
@@ -22,7 +22,7 @@ rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
 reqwest = { version = "0.13", default-features = false, features = ["native-tls", "http2", "json", "form"] }
 rust-embed = "8.11"
 serde = { version = "1", default-features = false, features = ["derive"] }
-sha2 = "0.10"
+sha2 = "0.11"
 sqlx = { version = "0.8", default-features = false, features = ["macros", "postgres", "runtime-tokio", "tls-native-tls", "chrono"] }
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "time"] }
 

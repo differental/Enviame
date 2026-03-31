@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 use lettre::{Message, Transport, message::header::ContentType};
 use rand::{RngExt, distr::Alphanumeric};
 use sha2::Sha256;
