@@ -23,7 +23,7 @@ reqwest = { version = "0.13", default-features = false, features = ["native-tls"
 rust-embed = "8.11"
 serde = { version = "1", default-features = false, features = ["derive"] }
 sha2 = "0.11"
-sqlx = { version = "0.8", default-features = false, features = ["macros", "postgres", "runtime-tokio", "tls-native-tls", "chrono"] }
+sqlx = { version = "0.9", default-features = false, features = ["macros", "postgres", "runtime-tokio", "tls-native-tls", "chrono"] }
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "time"] }
 
 [build-dependencies]
