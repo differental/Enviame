@@ -20,14 +20,14 @@ lettre = { version = "0.11", default-features = false, features = ["builder", "s
 mime_guess = "2.0"
 rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
 reqwest = { version = "0.13", default-features = false, features = ["native-tls", "http2", "json", "form"] }
-rust-embed = "8.12"
+rust-embed = "8.13"
 serde = { version = "1", default-features = false, features = ["derive"] }
 sha2 = "0.11"
 sqlx = { version = "0.9", default-features = false, features = ["macros", "postgres", "runtime-tokio", "tls-native-tls", "chrono"] }
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "time"] }
 
 [build-dependencies]
-html-minifier = "5.0"
+html-minifier = "6.0"
 
 [profile.release-prod]
 inherits = "release"
