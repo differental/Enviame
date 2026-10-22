@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG RUST_VERSION=1.99.1
+ARG RUST_VERSION=1.99.0
 ARG APP_NAME=enviame
 
 FROM rust:${RUST_VERSION}-alpine AS build
